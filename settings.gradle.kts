@@ -9,4 +9,6 @@ include(":libraries:git")
 
 include(":libraries:unix-filesystem")
 
+include(":libraries:system")
+
 include(":examples:cli")
