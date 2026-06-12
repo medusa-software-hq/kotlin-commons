@@ -11,4 +11,6 @@ include(":libraries:unix-filesystem")
 
 include(":libraries:system")
 
+include(":libraries:text")
+
 include(":examples:cli")
