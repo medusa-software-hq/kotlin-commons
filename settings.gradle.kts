@@ -5,12 +5,11 @@ plugins {
 
 rootProject.name = "commons"
 
-include(":libraries:git")
-
-include(":libraries:unix-filesystem")
-
-include(":libraries:system")
-
-include(":libraries:text")
-
-include(":examples:cli")
+include(
+    ":examples:cli",
+    ":libraries:git",
+    ":libraries:openai-client",
+    ":libraries:system",
+    ":libraries:text",
+    ":libraries:unix-filesystem",
+)

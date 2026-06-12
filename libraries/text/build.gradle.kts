@@ -9,6 +9,4 @@ group = "software.medusa.commons"
 
 version = "0.1.0-SNAPSHOT"
 
-dependencies {
-  testImplementation(libs.kotlin.test)
-}
+dependencies { testImplementation(libs.kotlin.test) }
