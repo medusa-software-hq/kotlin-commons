@@ -1,0 +1,32 @@
+version: '3'
+
+vars:
+  GRADLEW: ../../gradlew --console=plain
+
+# noinspection YAMLSchemaValidation
+.kotlinSources: &kotlinSources
+  - '**/*.kt'
+  - '../../libraries/**/*.kt'
+
+tasks:
+  install:
+    desc: Install cli
+    sources: *kotlinSources
+    generates:
+      - ./build/install/cli/bin/cli
+    cmds:
+      - '{{.GRADLEW}} :examples:cli:installDist'
+
+  bootstrap:
+    desc: Bootstrap user-specific cli script
+    status:
+      - test -f ./bin/user/cli
+    cmds:
+      - cp ./bin/user/cli.sample ./bin/user/cli
+
+  run:
+    desc: Run user-specific cli script
+    deps: [install, bootstrap]
+    cmds:
+      - ./bin/user/cli {{.CLI_ARGS}}
+    interactive: true
