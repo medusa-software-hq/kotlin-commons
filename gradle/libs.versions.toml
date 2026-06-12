@@ -1,16 +1,20 @@
 [versions]
 detekt = "1.23.8"
+jgit = "7.7.0.202606012155-r"
 kotlin = "2.4.0"
 kotlinxCoroutines = "1.11.0"
+kotlinxIo = "0.9.0"
 kotlinxSerialization = "1.11.0"
 ktfmt = "0.26.0"
 versionCatalogUpdate = "1.1.0"
 
 [libraries]
 clikt = "com.github.ajalt.clikt:clikt-jvm:5.1.0"
+jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+kotlinx-io-bytestring = { module = "org.jetbrains.kotlinx:kotlinx-io-bytestring", version.ref = "kotlinxIo" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 [plugins]

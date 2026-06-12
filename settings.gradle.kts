@@ -7,4 +7,6 @@ rootProject.name = "commons"
 
 include(":libraries:git")
 
+include(":libraries:unix-filesystem")
+
 include(":examples:cli")

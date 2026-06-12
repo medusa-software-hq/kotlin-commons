@@ -1,3 +1,7 @@
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+
 plugins {
   alias(libs.plugins.versionCatalogUpdate)
 
@@ -20,7 +24,47 @@ allprojects {
   }
 }
 
+val cloudsmithUsernameEnvVarName = "CLOUDSMITH_USERNAME"
+val cloudsmithPasswordEnvVarName = "CLOUDSMITH_PASSWORD"
+
 subprojects {
+  pluginManager.withPlugin("maven-publish") {
+    extensions.configure<PublishingExtension> {
+      publications {
+        create<MavenPublication>("mavenJava") {
+          from(components["java"])
+        }
+      }
+
+      repositories {
+        maven {
+          name = "cloudsmithPublicUpload"
+          url = uri("https://maven.cloudsmith.io/medusa-software/public/")
+
+          // Cloudsmith username/password pair can be either:
+          // - username = <Cloudsmith username> / password = <Cloudsmith Personal API Key>
+          // - username = 'token' / password = <Cloudsmith Entitlement Token>
+          credentials {
+            username = System.getenv(cloudsmithUsernameEnvVarName)
+            password = System.getenv(cloudsmithPasswordEnvVarName)
+          }
+        }
+      }
+    }
+
+    gradle.taskGraph.whenReady {
+      if (allTasks.any { it is PublishToMavenRepository }) {
+        require(!System.getenv(cloudsmithUsernameEnvVarName).isNullOrBlank()) {
+          "$cloudsmithUsernameEnvVarName must be set when publishing."
+        }
+
+        require(!System.getenv(cloudsmithPasswordEnvVarName).isNullOrBlank()) {
+          "$cloudsmithPasswordEnvVarName must be set when publishing."
+        }
+      }
+    }
+  }
+
   // Configure Kotlin/JVM modules.
   pluginManager.withPlugin(kotlinJvmPluginId) {
     // Apply Kotlin formatting and static analysis plugins.
@@ -37,6 +81,10 @@ subprojects {
         // Use a consistent Java toolchain version across local and CI builds.
         languageVersion = JavaLanguageVersion.of(usedJavaVersion)
       }
+    }
+
+    extensions.configure<DetektExtension> {
+      buildUponDefaultConfig = true
     }
 
     tasks.withType<JavaCompile>().configureEach {
