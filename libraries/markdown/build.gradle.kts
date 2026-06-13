@@ -18,4 +18,6 @@ dependencies {
 
 tasks.test { useJUnitPlatform() }
 
-kotlin { compilerOptions { freeCompilerArgs.set(listOf("-Xcontext-parameters")) } }
+java {
+  withSourcesJar()
+}

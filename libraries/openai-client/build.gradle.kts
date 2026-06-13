@@ -47,6 +47,10 @@ val integrationTest =
       classpath = sourceSets[integrationTestSourceSetName].runtimeClasspath
     }
 
+java {
+  withSourcesJar()
+}
+
 kotlin {
   compilerOptions { freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property")) }
 }
