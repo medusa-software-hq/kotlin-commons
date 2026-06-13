@@ -19,7 +19,6 @@ val usedJavaVersion = 21
 
 allprojects {
   repositories {
-    // Virtually all modules need Maven Central dependencies
     mavenCentral()
   }
 }

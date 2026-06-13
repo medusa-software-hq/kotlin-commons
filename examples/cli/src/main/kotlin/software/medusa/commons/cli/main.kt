@@ -8,7 +8,7 @@ private val terminal = Terminal()
 
 class RunCommand : CliktCommand() {
   override fun run() {
-    terminal.println("Answer: ${42}")
+    terminal.println("Answer: 42")
   }
 }
 

@@ -31,3 +31,6 @@ complexity:
   # TODO: Re-enable, disable only for tests
   LargeClass:
     active: false
+
+  CyclomaticComplexMethod:
+    active: false

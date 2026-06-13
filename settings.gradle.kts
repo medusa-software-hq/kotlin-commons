@@ -8,6 +8,7 @@ rootProject.name = "commons"
 include(
     ":examples:cli",
     ":libraries:git",
+    ":libraries:markdown",
     ":libraries:openai-client",
     ":libraries:system",
     ":libraries:text",
