@@ -7,14 +7,14 @@ import software.medusa.commons.unix.filesystem.UfsReadonlyEntity
 import software.medusa.commons.unix.filesystem.UfsReadonlyFile
 import software.medusa.commons.unix.path.UfsName
 
-sealed interface GitWorktreeDirectory : GitWorktreeEntity, UfsReadonlyDirectory {
+sealed interface GitWorktreeDirectory : GitWorktreeEntity {
   override val asFilesystemEntity: UfsReadonlyDirectory
 
   override val asFilteredFilesystemEntity: UfsReadonlyDirectory?
 
   val effectiveFilter: GitWorktreeFilter?
 
-  suspend fun readStructure(): Map<UfsName.Literal, GitWorktreeEntity>
+  suspend fun readIndex(): GitWorktreeDirectoryIndex
 
   suspend fun readChild(name: UfsName.Literal): GitWorktreeEntity?
 }
@@ -72,7 +72,7 @@ class FsGitIncludedWorktreeDirectory(
     private val localFilterLoader: GitIncludedWorktreeDirectory.LocalFilterLoader,
     private val directory: UfsReadonlyDirectory,
     override val effectiveFilter: GitWorktreeFilter,
-) : GitIncludedWorktreeDirectory, UfsReadonlyDirectory by directory {
+) : GitIncludedWorktreeDirectory {
   override val status: GitWorktreeEntity.Status.Considered
     get() = GitWorktreeEntity.Status.Considered(GitWorktreeFilter.Classification.Include)
 
@@ -84,7 +84,8 @@ class FsGitIncludedWorktreeDirectory(
         object : UfsReadonlyDirectory {
           override suspend fun readIndex() =
               UfsReadonlyDirectoryIndex(
-                  readStructure()
+                  this@FsGitIncludedWorktreeDirectory.readIndex()
+                      .childEntityByName
                       .mapNotNull { (name, childEntity) ->
                         val filteredEntity =
                             childEntity.asFilteredFilesystemEntity ?: return@mapNotNull null
@@ -99,20 +100,22 @@ class FsGitIncludedWorktreeDirectory(
           ): UfsReadonlyEntity? = readChild(name)?.asFilteredFilesystemEntity
         }
 
-  override suspend fun readStructure(): Map<UfsName.Literal, GitWorktreeEntity> =
-      directory
-          .readIndex()
-          .childEntityByName
-          .map { (name, entity) ->
-            name to
-                GitWorktreeEntity.consider(
-                    effectiveFilter = effectiveFilter,
-                    name = name,
-                    entity = entity,
-                    localFilterLoader = localFilterLoader,
-                )
-          }
-          .toMap()
+  override suspend fun readIndex(): GitWorktreeDirectoryIndex =
+      GitWorktreeDirectoryIndex(
+          directory
+              .readIndex()
+              .childEntityByName
+              .map { (name, entity) ->
+                name to
+                    GitWorktreeEntity.consider(
+                        effectiveFilter = effectiveFilter,
+                        name = name,
+                        entity = entity,
+                        localFilterLoader = localFilterLoader,
+                    )
+              }
+              .toMap(),
+      )
 
   override suspend fun readChild(name: UfsName.Literal): GitWorktreeEntity? {
     val entity = directory.extract(name) ?: return null
@@ -134,7 +137,7 @@ sealed interface GitExcludedWorktreeDirectory : GitWorktreeDirectory {
 
 sealed class FsGitExcludedWorktreeDirectory(
     private val directory: UfsReadonlyDirectory,
-) : GitExcludedWorktreeDirectory, UfsReadonlyDirectory by directory {
+) : GitExcludedWorktreeDirectory {
   override val asFilesystemEntity: UfsReadonlyDirectory
     get() = directory
 
@@ -144,12 +147,14 @@ sealed class FsGitExcludedWorktreeDirectory(
   final override val effectiveFilter: Nothing?
     get() = null
 
-  final override suspend fun readStructure(): Map<UfsName.Literal, GitWorktreeEntity> =
-      directory
-          .readIndex()
-          .childEntityByName
-          .map { (name, entity) -> name to GitWorktreeEntity.wrapNonConsidered(entity) }
-          .toMap()
+  final override suspend fun readIndex(): GitWorktreeDirectoryIndex =
+      GitWorktreeDirectoryIndex(
+          directory
+              .readIndex()
+              .childEntityByName
+              .map { (name, entity) -> name to GitWorktreeEntity.wrapNonConsidered(entity) }
+              .toMap(),
+      )
 
   final override suspend fun readChild(name: UfsName.Literal): GitWorktreeEntity? =
       directory.extract(name)?.let(GitWorktreeEntity::wrapNonConsidered)

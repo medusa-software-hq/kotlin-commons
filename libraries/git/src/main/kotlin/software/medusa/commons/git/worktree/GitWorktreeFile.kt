@@ -5,7 +5,7 @@ import software.medusa.commons.unix.filesystem.UfsReadonlyFile
 class GitWorktreeFile(
     private val file: UfsReadonlyFile,
     override val status: GitWorktreeEntity.Status,
-) : GitWorktreeEntity, UfsReadonlyFile by file {
+) : GitWorktreeEntity {
   override val asFilesystemEntity: UfsReadonlyFile
     get() = file
 
@@ -13,7 +13,7 @@ class GitWorktreeFile(
     get() =
         when (status) {
           is GitWorktreeEntity.Status.Considered ->
-              this.takeIf { status.classification == GitWorktreeFilter.Classification.Include }
+              file.takeIf { status.classification == GitWorktreeFilter.Classification.Include }
 
           GitWorktreeEntity.Status.NonConsidered -> null
         }
