@@ -9,9 +9,7 @@ group = "software.medusa.commons"
 
 version = "0.2.0-SNAPSHOT"
 
-java {
-  withSourcesJar()
-}
+java { withSourcesJar() }
 
 dependencies {
   api(libs.kotlinx.io.bytestring)

@@ -23,9 +23,7 @@ sealed class MdBlock {
       val content: MdInlineContent,
   ) : MdBlock() {
     override fun dump(): CmParagraph =
-        CmParagraph().also { paragraph ->
-          content.dump().forEach(paragraph::appendChild)
-        }
+        CmParagraph().also { paragraph -> content.dump().forEach(paragraph::appendChild) }
 
     companion object {
       internal fun load(
@@ -40,8 +38,7 @@ sealed class MdBlock {
   data class ListBlock(
       val topLevel: Level,
   ) : MdBlock() {
-    override fun dump(): BulletList =
-        topLevel.dump()
+    override fun dump(): BulletList = topLevel.dump()
 
     @JvmInline
     value class Level(
@@ -85,13 +82,9 @@ sealed class MdBlock {
       internal fun dump(): ListItem =
           ListItem().also { item ->
             item.appendChild(
-                CmParagraph().also { paragraph ->
-                  content.dump().forEach(paragraph::appendChild)
-                },
+                CmParagraph().also { paragraph -> content.dump().forEach(paragraph::appendChild) },
             )
-            nestedLevel?.let {
-              item.appendChild(it.dump())
-            }
+            nestedLevel?.let { item.appendChild(it.dump()) }
           }
 
       companion object {

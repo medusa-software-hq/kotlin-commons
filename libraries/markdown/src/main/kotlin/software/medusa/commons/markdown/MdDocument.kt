@@ -65,7 +65,5 @@ value class MdDocument(
   fun render(): String = commonmarkMarkdownRenderer.render(dump())
 
   private fun dump(): Document =
-      Document().also { document ->
-        rootChapter.dump(level = 1).forEach(document::appendChild)
-      }
+      Document().also { document -> rootChapter.dump(level = 1).forEach(document::appendChild) }
 }

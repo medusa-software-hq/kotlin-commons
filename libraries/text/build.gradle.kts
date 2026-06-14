@@ -11,6 +11,4 @@ version = "0.1.0-SNAPSHOT"
 
 dependencies { testImplementation(libs.kotlin.test) }
 
-java {
-  withSourcesJar()
-}
+java { withSourcesJar() }

@@ -20,6 +20,4 @@ dependencies {
   testImplementation(libs.kotlinx.coroutines.test)
 }
 
-java {
-  withSourcesJar()
-}
+java { withSourcesJar() }
