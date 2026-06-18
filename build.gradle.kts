@@ -21,6 +21,8 @@ allprojects {
   repositories {
     mavenCentral()
   }
+
+  version = rootProject.version
 }
 
 val cloudsmithUsernameEnvVarName = "CLOUDSMITH_USERNAME"

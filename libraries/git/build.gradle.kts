@@ -7,8 +7,6 @@ plugins {
 
 group = "software.medusa.commons"
 
-version = "0.2.0-SNAPSHOT"
-
 java { withSourcesJar() }
 
 dependencies {

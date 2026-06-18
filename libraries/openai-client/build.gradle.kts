@@ -11,8 +11,6 @@ val integrationTestSourceSetName = "integrationTest"
 
 group = "software.medusa.commons"
 
-version = "0.1.0-SNAPSHOT"
-
 dependencies {
   api(libs.kotlinx.coroutines.core)
   api(libs.kotlinx.schema.annotations)
