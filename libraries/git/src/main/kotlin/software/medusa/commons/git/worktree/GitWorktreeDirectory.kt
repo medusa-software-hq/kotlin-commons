@@ -32,7 +32,8 @@ interface GitIncludedWorktreeDirectory : GitWorktreeDirectory {
     override suspend fun loadLocalFilter(
         directory: UfsReadonlyDirectory,
     ): GitWorktreeFilter? {
-      val gitignoreFile = directory.extract(name = gitignoreFileName) ?: return null
+      val extract = directory.extract(name = gitignoreFileName)
+      val gitignoreFile = extract ?: return null
 
       require(gitignoreFile is UfsReadonlyFile) {
         "Expected $gitignoreFileName to be a file, got ${gitignoreFile::class.simpleName}"

@@ -1,5 +1,6 @@
 package software.medusa.commons.git.worktree
 
+import software.medusa.commons.git.worktree.GitWorktreeFilter.Classification
 import software.medusa.commons.unix.filesystem.UfsReadonlyDirectory
 import software.medusa.commons.unix.filesystem.UfsReadonlyEntity
 import software.medusa.commons.unix.filesystem.UfsReadonlyFile
@@ -8,8 +9,14 @@ import software.medusa.commons.unix.path.UfsName
 
 sealed interface GitWorktreeEntity {
   sealed interface Status {
+    companion object {
+      val included: Considered = Considered(
+          classification = Classification.Include,
+      )
+    }
+
     data class Considered(
-        val classification: GitWorktreeFilter.Classification,
+        val classification: Classification,
     ) : Status
 
     data object NonConsidered : Status
@@ -33,9 +40,10 @@ sealed interface GitWorktreeEntity {
       return when (entity) {
         is UfsReadonlyDirectory ->
             when (classification) {
-              GitWorktreeFilter.Classification.Ignore ->
+              Classification.Ignore ->
                   GitIgnoredWorktreeDirectory(directory = entity)
-              GitWorktreeFilter.Classification.Include ->
+
+              Classification.Include ->
                   GitIncludedWorktreeDirectory.include(
                       directory = entity,
                       baseFilter = effectiveFilter.nest(name.content),
