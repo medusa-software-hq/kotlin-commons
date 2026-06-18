@@ -39,7 +39,7 @@ jobs:
       - name: Build and test
         run: ./gradlew build
 
-  check-terraform-config:
+  check-repo-config:
     name: Check repo Terraform configuration
     runs-on: ubuntu-latest
 
