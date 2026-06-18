@@ -86,23 +86,23 @@ data class MdChapter(
     }
 
     fun wrapper(
-        title: List<MdInlineNode>,
+        title: MdInlineContent,
         introBlocks: List<MdBlock> = emptyList(),
         subChapters: List<MdChapter>,
     ): MdChapter =
         MdChapter(
-            title = MdInlineContent(title),
+            title = title,
             blocks = introBlocks,
             subChapters = subChapters,
         )
 
     fun leaf(
-        title: List<MdInlineNode>,
+        title: MdInlineContent,
         blocks: List<MdBlock>,
     ): MdChapter =
-        wrapper(
+        MdChapter(
             title = title,
-            introBlocks = blocks,
+            blocks = blocks,
             subChapters = emptyList(),
         )
   }

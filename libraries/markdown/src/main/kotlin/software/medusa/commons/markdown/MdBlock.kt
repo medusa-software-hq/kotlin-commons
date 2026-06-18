@@ -45,6 +45,13 @@ sealed class MdBlock {
         val items: List<Item>,
     ) {
       companion object {
+        fun of(
+            items: List<Item>,
+        ): Level? = when {
+          items.isNotEmpty() -> Level(items = items)
+          else -> null
+        }
+
         internal fun load(
             listBlock: CmListBlock,
         ): Level =
@@ -70,6 +77,7 @@ sealed class MdBlock {
 
       internal fun dump(): BulletList =
           BulletList().also { list ->
+            list.isTight = true
             list.marker = "-"
             items.forEach { item -> list.appendChild(item.dump()) }
           }
@@ -222,17 +230,4 @@ sealed class MdBlock {
   }
 
   internal abstract fun dump(): Block
-}
-
-private fun configureList(list: CmListBlock) {
-  list.isTight = false
-
-  when (list) {
-    is BulletList -> list.marker = "-"
-
-    is OrderedList -> {
-      list.markerStartNumber = 1
-      list.markerDelimiter = "."
-    }
-  }
 }

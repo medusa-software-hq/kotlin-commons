@@ -10,6 +10,26 @@ import org.commonmark.node.StrongEmphasis
 import org.commonmark.node.Text as CmText
 
 sealed class MdInlineNode {
+  companion object {
+    internal fun load(node: Node): MdInlineNode =
+        when (node) {
+          is CmText -> Text(node.literal)
+          is CmCode -> Code(node.literal)
+          is CmEmphasis -> Emphasis(MdInlineContent.load(node).inlineNodes)
+          is StrongEmphasis -> Strong(MdInlineContent.load(node).inlineNodes)
+          is CmLink ->
+            Link(
+                destination = node.destination,
+                title = node.title,
+                content = MdInlineContent.load(node).inlineNodes,
+            )
+
+          is SoftLineBreak -> SoftBreak
+          is HardLineBreak -> HardBreak
+          else -> throw MdParseException("Unsupported inline node: ${node::class.simpleName}")
+        }
+  }
+
   internal abstract fun dump(): Node
 
   fun render(): String = MdDocument.render(inlineNode = this)
