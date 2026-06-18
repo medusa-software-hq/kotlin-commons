@@ -5,35 +5,23 @@ version: "3"
   - '**/*.kt'
 
 includes:
-  github:config:
-    taskfile: .github/config/Taskfile.yml
-    dir: .github/config
+  github:
+    taskfile: .github/Taskfile.yml
+    dir: github
 
 tasks:
-  checkFormatting:
-    desc: Check formatting for the entire codebase
-    deps:
-      - github:config:checkFormatting
-      - gradleRoot:checkFormatting
-
-  fixFormatting:
+  all:fixFormatting:
     desc: Fix formatting for the entire codebase
     deps:
       - github:config:fixFormatting
       - gradleRoot:fixFormatting
 
-  analyzeStatically:
+  all:analyzeStatically:
     desc: Statically analyze the entire codebase
     deps:
       - github:config:lint
+      - github:workflows:lint
       - gradleRoot:analyzeStatically
-
-  gradleRoot:checkFormatting:
-    desc: Check formatting for the root Gradle project
-    sources: *kotlinSources
-    cmds:
-      - ./gradlew ktfmtCheck
-    interactive: true
 
   gradleRoot:fixFormatting:
     desc: Fix formatting for the root Gradle project
