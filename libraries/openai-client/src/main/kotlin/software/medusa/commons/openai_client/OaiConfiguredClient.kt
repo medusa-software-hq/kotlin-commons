@@ -1,5 +1,6 @@
 package software.medusa.commons.openai_client
 
+import com.aallam.openai.api.chat.Effort
 import java.net.URI
 import kotlinx.schema.generator.json.serialization.SerializationClassJsonSchemaGenerator
 import kotlinx.schema.json.JsonSchema
@@ -10,9 +11,28 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 interface OaiConfiguredClient : AutoCloseable {
+  enum class ReasoningEffort {
+    None,
+    Minimal,
+    Low,
+    Medium,
+    High,
+    ExtraHigh;
+
+    fun toSdkEffort(): Effort = when (this) {
+      None -> Effort("none")
+      Minimal -> Effort("minimal")
+      Low -> Effort("low")
+      Medium -> Effort("medium")
+      High -> Effort("high")
+      ExtraHigh -> Effort("xhigh")
+    }
+  }
+
   @Serializable
   data class CompletionRequest(
       val input: OaiChat,
+      val reasoningEffort: ReasoningEffort = ReasoningEffort.Medium,
       val maxOutputTokenCount: Int? = null,
       val temperature: Double? = null,
   )

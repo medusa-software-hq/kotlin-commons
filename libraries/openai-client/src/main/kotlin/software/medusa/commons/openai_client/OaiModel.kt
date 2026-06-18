@@ -29,6 +29,20 @@ sealed class OaiModel {
     override val id: String = "openai/gpt-oss-120b"
   }
 
+  // openai/gpt-5-nano
+
+  /**
+   * GPT 5 Nano
+   *
+   * $0.02 in (no cache), $0.40 out
+   *
+   * Context: 400K
+   */
+  @Serializable
+  data object GptNano : OaiModel() {
+    override val id: String = "openai/gpt-5-nano"
+  }
+
   /**
    * GPT 5.4 Mini
    *
@@ -38,7 +52,7 @@ sealed class OaiModel {
    */
   @Serializable
   data object GptMini : OaiModel() {
-    override val id: String = "openai/gpt-5.4-mini"
+    override val id: String = "gpt-5.4-mini"
   }
 
   /**
@@ -53,12 +67,12 @@ sealed class OaiModel {
    */
   @Serializable
   data object GptMidi : OaiModel() {
-    override val id: String = "openai/gpt-5.4"
+    override val id: String = "gpt-5.4"
   }
 
   // endregion
 
-  // (*) For Anthropic models, cache write price is for 1 hour cache
+  // (*) For Anthropic models, cache write price is for 5 minute cache
   // region Anthropic models
 
   /**
@@ -197,6 +211,20 @@ sealed class OaiModel {
   // endregion
 
   // region Meta models
+
+  // meta-llama/llama-3.1-8b-instruct
+
+  /**
+   * Llama 3.1 8B
+   *
+   * $0.02 in (no cache), $0.03 out
+   *
+   * Context: 131.1K
+   */
+  @Serializable
+  data object Llama8B : OaiModel() {
+    override val id: String = "meta-llama/llama-3.1-8b-instruct"
+  }
 
   /**
    * Llama 3.3 70B

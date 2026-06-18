@@ -38,6 +38,7 @@ data object OaiProperClient : OaiFreeClient {
                 openAi.chatCompletion(
                     ChatCompletionRequest(
                         model = model.toSdkModelId(),
+                        reasoningEffort = request.reasoningEffort.toSdkEffort(),
                         messages = request.input.toSdkMessages(),
                         maxCompletionTokens = request.maxOutputTokenCount,
                         temperature = request.temperature,
