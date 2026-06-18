@@ -11,9 +11,9 @@ import org.commonmark.node.Text as CmText
 
 sealed class MdInlineNode {
   companion object {
-    internal fun load(node: Node): MdInlineNode =
+    internal fun load(node: Node): MdInlineNode? =
         when (node) {
-          is CmText -> Text(node.literal)
+          is CmText -> Text.load(textNode = node)
           is CmCode -> Code(node.literal)
           is CmEmphasis -> Emphasis(MdInlineContent.load(node).inlineNodes)
           is StrongEmphasis -> Strong(MdInlineContent.load(node).inlineNodes)
@@ -37,6 +37,21 @@ sealed class MdInlineNode {
   data class Text(
       val text: String,
   ) : MdInlineNode() {
+    companion object {
+      fun load(
+          textNode: CmText,
+      ): MdInlineNode.Text? =
+          if (textNode.literal.isNotEmpty()) {
+            MdInlineNode.Text(textNode.literal)
+          } else {
+            null
+          }
+    }
+
+    init {
+      require(text.isNotEmpty()) { "Text node cannot be empty" }
+    }
+
     override fun dump(): Node = CmText(text)
   }
 
