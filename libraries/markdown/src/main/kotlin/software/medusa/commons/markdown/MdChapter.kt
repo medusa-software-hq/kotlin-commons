@@ -8,7 +8,7 @@ import software.medusa.commons.markdown.utils.popOfWhileNotNull
 
 data class MdChapter(
     val title: MdInlineContent,
-    val blocks: List<MdBlock>,
+    val element: MdElement,
     val subChapters: List<MdChapter>,
 ) {
   internal fun dump(level: Int): List<Node> = buildList {
@@ -18,7 +18,7 @@ data class MdChapter(
           title.dump().forEach(heading::appendChild)
         },
     )
-    addAll(blocks.map { block -> block.dump() })
+    addAll(element.dump())
     subChapters.forEach { subChapter -> addAll(subChapter.dump(level = level + 1)) }
   }
 
@@ -43,7 +43,7 @@ data class MdChapter(
         // This is a leaf chapter
         return MdChapter(
             title = title,
-            blocks = leadingBlocks,
+            element = MdElement(leadingBlocks),
             subChapters = emptyList(),
         )
       }
@@ -80,29 +80,29 @@ data class MdChapter(
 
       return MdChapter(
           title = title,
-          blocks = leadingBlocks,
+          element = MdElement(leadingBlocks),
           subChapters = subChapters,
       )
     }
 
     fun wrapper(
         title: MdInlineContent,
-        introBlocks: List<MdBlock> = emptyList(),
+        introElement: MdElement = MdElement.Empty,
         subChapters: List<MdChapter>,
     ): MdChapter =
         MdChapter(
             title = title,
-            blocks = introBlocks,
+            element = introElement,
             subChapters = subChapters,
         )
 
     fun leaf(
         title: MdInlineContent,
-        blocks: List<MdBlock>,
+        element: MdElement,
     ): MdChapter =
         MdChapter(
             title = title,
-            blocks = blocks,
+            element = element,
             subChapters = emptyList(),
         )
   }

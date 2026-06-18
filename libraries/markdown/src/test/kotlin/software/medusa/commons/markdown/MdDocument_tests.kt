@@ -7,45 +7,48 @@ import kotlin.test.assertFailsWith
 class MdDocument_tests {
   @Test
   fun toMarkdownString_roundTripsSupportedDocument() {
-    val document =
-        MdDocument(
-            rootChapter =
-                MdChapter(
-                    title =
-                        MdInlineContent(
-                            listOf(
-                                MdInlineNode.Text("Welcome to "),
-                                MdInlineNode.Link(
-                                    destination = "https://example.com/docs path",
-                                    title = "Docs",
-                                    content =
-                                        listOf(
-                                            MdInlineNode.Strong(
-                                                listOf(MdInlineNode.Text("Medusa")),
-                                            ),
-                                        ),
-                                ),
-                            ),
-                        ),
-                    blocks =
+    val title =
+        MdInlineContent(
+            listOf(
+                MdInlineNode.Text("Welcome to "),
+                MdInlineNode.Link(
+                    destination = "https://example.com/docs path",
+                    title = "Docs",
+                    content = listOf(MdInlineNode.Strong(listOf(MdInlineNode.Text("Medusa")))),
+                ),
+            ),
+        )
+
+    val introParagraph =
+        MdBlock.Paragraph(
+            content =
+                MdInlineContent(
+                    listOf(
+                        MdInlineNode.Text("Intro with "),
+                        MdInlineNode.Code("code"),
+                        MdInlineNode.Text(" and "),
+                        MdInlineNode.Emphasis(listOf(MdInlineNode.Text("focus"))),
+                        MdInlineNode.HardBreak,
+                        MdInlineNode.Text("second line"),
+                    ),
+                ),
+        )
+
+    val listBlock =
+        MdBlock.ListBlock(
+            topLevel =
+                MdBlock.ListBlock.Level(
+                    items =
                         listOf(
-                            MdBlock.Paragraph(
+                            MdBlock.ListBlock.Item(
                                 content =
-                                    MdInlineContent(
-                                        listOf(
-                                            MdInlineNode.Text("Intro with "),
-                                            MdInlineNode.Code("code"),
-                                            MdInlineNode.Text(" and "),
-                                            MdInlineNode.Emphasis(
-                                                listOf(MdInlineNode.Text("focus")),
-                                            ),
-                                            MdInlineNode.HardBreak,
-                                            MdInlineNode.Text("second line"),
-                                        ),
-                                    ),
+                                    MdInlineContent(listOf(MdInlineNode.Text("first bullet"))),
+                                nestedLevel = null,
                             ),
-                            MdBlock.ListBlock(
-                                topLevel =
+                            MdBlock.ListBlock.Item(
+                                content =
+                                    MdInlineContent(listOf(MdInlineNode.Text("parent bullet"))),
+                                nestedLevel =
                                     MdBlock.ListBlock.Level(
                                         items =
                                             listOf(
@@ -53,66 +56,47 @@ class MdDocument_tests {
                                                     content =
                                                         MdInlineContent(
                                                             listOf(
-                                                                MdInlineNode.Text("first bullet"),
-                                                            ),
+                                                                MdInlineNode.Text("nested bullet")
+                                                            )
                                                         ),
                                                     nestedLevel = null,
-                                                ),
-                                                MdBlock.ListBlock.Item(
-                                                    content =
-                                                        MdInlineContent(
-                                                            listOf(
-                                                                MdInlineNode.Text("parent bullet"),
-                                                            ),
-                                                        ),
-                                                    nestedLevel =
-                                                        MdBlock.ListBlock.Level(
-                                                            items =
-                                                                listOf(
-                                                                    MdBlock.ListBlock.Item(
-                                                                        content =
-                                                                            MdInlineContent(
-                                                                                listOf(
-                                                                                    MdInlineNode
-                                                                                        .Text(
-                                                                                            "nested bullet",
-                                                                                        ),
-                                                                                ),
-                                                                            ),
-                                                                        nestedLevel = null,
-                                                                    ),
-                                                                ),
-                                                        ),
                                                 ),
                                             ),
                                     ),
                             ),
-                            MdBlock.CodeBlock(
-                                code = "val ticks = \"```\"\n",
-                                info = "kotlin",
-                            ),
-                            MdBlock.RawCodeBlock(
-                                code = "literal **markdown**\n",
+                        ),
+                ),
+        )
+
+    val childChapter =
+        MdChapter(
+            title = MdInlineContent(listOf(MdInlineNode.Text("Child"))),
+            element =
+                MdElement(
+                    listOf(
+                        MdBlock.Paragraph(
+                            content = MdInlineContent(listOf(MdInlineNode.Text("child paragraph"))),
+                        ),
+                    ),
+                ),
+            subChapters = emptyList(),
+        )
+
+    val document =
+        MdDocument(
+            rootChapter =
+                MdChapter(
+                    title = title,
+                    element =
+                        MdElement(
+                            listOf(
+                                introParagraph,
+                                listBlock,
+                                MdBlock.CodeBlock(code = "val ticks = \"```\"\n", info = "kotlin"),
+                                MdBlock.RawCodeBlock(code = "literal **markdown**\n"),
                             ),
                         ),
-                    subChapters =
-                        listOf(
-                            MdChapter(
-                                title = MdInlineContent(listOf(MdInlineNode.Text("Child"))),
-                                blocks =
-                                    listOf(
-                                        MdBlock.Paragraph(
-                                            content =
-                                                MdInlineContent(
-                                                    listOf(
-                                                        MdInlineNode.Text("child paragraph"),
-                                                    ),
-                                                ),
-                                        ),
-                                    ),
-                                subChapters = emptyList(),
-                            ),
-                        ),
+                    subChapters = listOf(childChapter),
                 ),
         )
 
@@ -126,15 +110,17 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.Paragraph(
-                                content =
-                                    MdInlineContent(
-                                        listOf(
-                                            MdInlineNode.Text("- bullet?"),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.Paragraph(
+                                    content =
+                                        MdInlineContent(
+                                            listOf(
+                                                MdInlineNode.Text("- bullet?"),
+                                            ),
                                         ),
-                                    ),
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -151,21 +137,23 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.Paragraph(
-                                content =
-                                    MdInlineContent(
-                                        listOf(
-                                            MdInlineNode.Text("prefix "),
-                                            MdInlineNode.Code("has `` inside"),
-                                            MdInlineNode.Text(" suffix"),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.Paragraph(
+                                    content =
+                                        MdInlineContent(
+                                            listOf(
+                                                MdInlineNode.Text("prefix "),
+                                                MdInlineNode.Code("has `` inside"),
+                                                MdInlineNode.Text(" suffix"),
+                                            ),
                                         ),
-                                    ),
-                            ),
-                            MdBlock.CodeBlock(
-                                code = "````\ncontent\n````\n",
-                                info = null,
+                                ),
+                                MdBlock.CodeBlock(
+                                    code = "````\ncontent\n````\n",
+                                    info = null,
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -214,25 +202,27 @@ class MdDocument_tests {
                                 ),
                             ),
                         ),
-                    blocks =
-                        listOf(
-                            MdBlock.Paragraph(
-                                content =
-                                    MdInlineContent(
-                                        listOf(
-                                            MdInlineNode.Text("Intro with "),
-                                            MdInlineNode.Code("code"),
-                                            MdInlineNode.Text(" and "),
-                                            MdInlineNode.Emphasis(
-                                                listOf(MdInlineNode.Text("focus")),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.Paragraph(
+                                    content =
+                                        MdInlineContent(
+                                            listOf(
+                                                MdInlineNode.Text("Intro with "),
+                                                MdInlineNode.Code("code"),
+                                                MdInlineNode.Text(" and "),
+                                                MdInlineNode.Emphasis(
+                                                    listOf(MdInlineNode.Text("focus")),
+                                                ),
+                                                MdInlineNode.Text("."),
                                             ),
-                                            MdInlineNode.Text("."),
                                         ),
-                                    ),
-                            ),
-                            MdBlock.CodeBlock(
-                                code = "val answer = 42\n",
-                                info = "kotlin",
+                                ),
+                                MdBlock.CodeBlock(
+                                    code = "val answer = 42\n",
+                                    info = "kotlin",
+                                ),
                             ),
                         ),
                     subChapters =
@@ -240,19 +230,23 @@ class MdDocument_tests {
                             MdChapter(
                                 title =
                                     MdInlineContent(listOf(MdInlineNode.Text("Getting Started"))),
-                                blocks =
-                                    listOf(
-                                        MdBlock.Paragraph(
-                                            content =
-                                                MdInlineContent(
-                                                    listOf(
-                                                        MdInlineNode.Text("Start with "),
-                                                        MdInlineNode.Strong(
-                                                            listOf(MdInlineNode.Text("confidence")),
+                                element =
+                                    MdElement(
+                                        listOf(
+                                            MdBlock.Paragraph(
+                                                content =
+                                                    MdInlineContent(
+                                                        listOf(
+                                                            MdInlineNode.Text("Start with "),
+                                                            MdInlineNode.Strong(
+                                                                listOf(
+                                                                    MdInlineNode.Text("confidence")
+                                                                ),
+                                                            ),
+                                                            MdInlineNode.Text("."),
                                                         ),
-                                                        MdInlineNode.Text("."),
                                                     ),
-                                                ),
+                                            ),
                                         ),
                                     ),
                                 subChapters =
@@ -262,27 +256,30 @@ class MdDocument_tests {
                                                 MdInlineContent(
                                                     listOf(MdInlineNode.Text("Install"))
                                                 ),
-                                            blocks =
-                                                listOf(
-                                                    MdBlock.Paragraph(
-                                                        content =
-                                                            MdInlineContent(
-                                                                listOf(
-                                                                    MdInlineNode.Text("Use "),
-                                                                    MdInlineNode.Link(
-                                                                        destination =
-                                                                            "https://example.com/install",
-                                                                        title = "Install",
-                                                                        content =
-                                                                            listOf(
-                                                                                MdInlineNode.Text(
-                                                                                    "the guide",
+                                            element =
+                                                MdElement(
+                                                    listOf(
+                                                        MdBlock.Paragraph(
+                                                            content =
+                                                                MdInlineContent(
+                                                                    listOf(
+                                                                        MdInlineNode.Text("Use "),
+                                                                        MdInlineNode.Link(
+                                                                            destination =
+                                                                                "https://example.com/install",
+                                                                            title = "Install",
+                                                                            content =
+                                                                                listOf(
+                                                                                    MdInlineNode
+                                                                                        .Text(
+                                                                                            "the guide",
+                                                                                        ),
                                                                                 ),
-                                                                            ),
+                                                                        ),
+                                                                        MdInlineNode.Text("."),
                                                                     ),
-                                                                    MdInlineNode.Text("."),
                                                                 ),
-                                                            ),
+                                                        ),
                                                     ),
                                                 ),
                                             subChapters = emptyList(),
@@ -314,34 +311,38 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.ListBlock(
-                                topLevel =
-                                    MdBlock.ListBlock.Level(
-                                        items =
-                                            listOf(
-                                                MdBlock.ListBlock.Item(
-                                                    content =
-                                                        MdInlineContent(
-                                                            listOf(MdInlineNode.Text("first item"))
-                                                        ),
-                                                    nestedLevel = null,
-                                                ),
-                                                MdBlock.ListBlock.Item(
-                                                    content =
-                                                        MdInlineContent(
-                                                            listOf(
-                                                                MdInlineNode.Text(
-                                                                    "second item with ",
-                                                                ),
-                                                                MdInlineNode.Code("code"),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.ListBlock(
+                                    topLevel =
+                                        MdBlock.ListBlock.Level(
+                                            items =
+                                                listOf(
+                                                    MdBlock.ListBlock.Item(
+                                                        content =
+                                                            MdInlineContent(
+                                                                listOf(
+                                                                    MdInlineNode.Text("first item")
+                                                                )
                                                             ),
-                                                        ),
-                                                    nestedLevel = null,
+                                                        nestedLevel = null,
+                                                    ),
+                                                    MdBlock.ListBlock.Item(
+                                                        content =
+                                                            MdInlineContent(
+                                                                listOf(
+                                                                    MdInlineNode.Text(
+                                                                        "second item with ",
+                                                                    ),
+                                                                    MdInlineNode.Code("code"),
+                                                                ),
+                                                            ),
+                                                        nestedLevel = null,
+                                                    ),
                                                 ),
-                                            ),
-                                    ),
+                                        ),
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -369,41 +370,45 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.ListBlock(
-                                topLevel =
-                                    MdBlock.ListBlock.Level(
-                                        items =
-                                            listOf(
-                                                MdBlock.ListBlock.Item(
-                                                    content =
-                                                        MdInlineContent(
-                                                            listOf(
-                                                                MdInlineNode.Text("parent item"),
-                                                            ),
-                                                        ),
-                                                    nestedLevel =
-                                                        MdBlock.ListBlock.Level(
-                                                            items =
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.ListBlock(
+                                    topLevel =
+                                        MdBlock.ListBlock.Level(
+                                            items =
+                                                listOf(
+                                                    MdBlock.ListBlock.Item(
+                                                        content =
+                                                            MdInlineContent(
                                                                 listOf(
-                                                                    MdBlock.ListBlock.Item(
-                                                                        content =
-                                                                            MdInlineContent(
-                                                                                listOf(
-                                                                                    MdInlineNode
-                                                                                        .Text(
-                                                                                            "nested child",
-                                                                                        ),
-                                                                                ),
-                                                                            ),
-                                                                        nestedLevel = null,
+                                                                    MdInlineNode.Text(
+                                                                        "parent item"
                                                                     ),
                                                                 ),
-                                                        ),
+                                                            ),
+                                                        nestedLevel =
+                                                            MdBlock.ListBlock.Level(
+                                                                items =
+                                                                    listOf(
+                                                                        MdBlock.ListBlock.Item(
+                                                                            content =
+                                                                                MdInlineContent(
+                                                                                    listOf(
+                                                                                        MdInlineNode
+                                                                                            .Text(
+                                                                                                "nested child",
+                                                                                            ),
+                                                                                    ),
+                                                                                ),
+                                                                            nestedLevel = null,
+                                                                        ),
+                                                                    ),
+                                                            ),
+                                                    ),
                                                 ),
-                                            ),
-                                    ),
+                                        ),
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -433,16 +438,18 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.RawCodeBlock(
-                                code =
-                                    """
-                                    first line
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.RawCodeBlock(
+                                    code =
+                                        """
+                                        first line
 
-                                    second line with ``` and **literal** text
-                                    """
-                                        .trimIndent() + "\n",
+                                        second line with ``` and **literal** text
+                                        """
+                                            .trimIndent() + "\n",
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -469,7 +476,7 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks = listOf(MdBlock.RawCodeBlock(code = "")),
+                    element = MdElement(listOf(MdBlock.RawCodeBlock(code = ""))),
                     subChapters = emptyList(),
                 ),
         ),
@@ -497,16 +504,18 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.RawCodeBlock(
-                                code =
-                                    """
-                                    ```java
-                                    code
-                                    ```
-                                    """
-                                        .trimIndent() + "\n",
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.RawCodeBlock(
+                                    code =
+                                        """
+                                        ```java
+                                        code
+                                        ```
+                                        """
+                                            .trimIndent() + "\n",
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -535,10 +544,12 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.RawCodeBlock(
-                                code = "code\n${ControlChar.ETX} a\n",
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.RawCodeBlock(
+                                    code = "code\n${ControlChar.ETX} a\n",
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
@@ -568,7 +579,7 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks = listOf(MdBlock.RawCodeBlock(code = "code\n")),
+                    element = MdElement(listOf(MdBlock.RawCodeBlock(code = "code\n"))),
                     subChapters = emptyList(),
                 ),
         ),
@@ -612,10 +623,12 @@ class MdDocument_tests {
             rootChapter =
                 MdChapter(
                     title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
-                    blocks =
-                        listOf(
-                            MdBlock.RawCodeBlock(
-                                code = "code\n    ${ControlChar.ETX}\nend\n",
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.RawCodeBlock(
+                                    code = "code\n    ${ControlChar.ETX}\nend\n",
+                                ),
                             ),
                         ),
                     subChapters = emptyList(),
