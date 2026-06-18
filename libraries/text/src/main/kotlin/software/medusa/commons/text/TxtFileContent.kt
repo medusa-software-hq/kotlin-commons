@@ -11,23 +11,24 @@ value class TxtFileContent(
     val content: TxtBlock,
 ) {
   companion object {
-    private val decoder = StandardCharsets.UTF_8
-        .newDecoder()
-        .onMalformedInput(CodingErrorAction.REPORT)
-        .onUnmappableCharacter(CodingErrorAction.REPORT)
+    private val decoder =
+        StandardCharsets.UTF_8.newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
 
     fun decode(
         byteContent: ByteString,
-    ): TxtFileContent? = try {
-      val rawContent = decoder.decode(byteContent.asReadOnlyByteBuffer()).toString()
-      val blockContent = TxtBlock.parse(rawContent = rawContent)
+    ): TxtFileContent? =
+        try {
+          val rawContent = decoder.decode(byteContent.asReadOnlyByteBuffer()).toString()
+          val blockContent = TxtBlock.parse(rawContent = rawContent)
 
-      TxtFileContent(
-          content = blockContent,
-      )
-    } catch (_: CharacterCodingException) {
-      null
-    }
+          TxtFileContent(
+              content = blockContent,
+          )
+        } catch (_: CharacterCodingException) {
+          null
+        }
   }
 
   fun dump(): String = content.dump()

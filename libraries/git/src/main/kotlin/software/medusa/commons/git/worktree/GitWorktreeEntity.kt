@@ -10,9 +10,10 @@ import software.medusa.commons.unix.path.UfsName
 sealed interface GitWorktreeEntity {
   sealed interface Status {
     companion object {
-      val included: Considered = Considered(
-          classification = Classification.Include,
-      )
+      val included: Considered =
+          Considered(
+              classification = Classification.Include,
+          )
     }
 
     data class Considered(
@@ -40,8 +41,7 @@ sealed interface GitWorktreeEntity {
       return when (entity) {
         is UfsReadonlyDirectory ->
             when (classification) {
-              Classification.Ignore ->
-                  GitIgnoredWorktreeDirectory(directory = entity)
+              Classification.Ignore -> GitIgnoredWorktreeDirectory(directory = entity)
 
               Classification.Include ->
                   GitIncludedWorktreeDirectory.include(

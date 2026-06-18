@@ -18,11 +18,11 @@ sealed class MdInlineNode {
           is CmEmphasis -> Emphasis(MdInlineContent.load(node).inlineNodes)
           is StrongEmphasis -> Strong(MdInlineContent.load(node).inlineNodes)
           is CmLink ->
-            Link(
-                destination = node.destination,
-                title = node.title,
-                content = MdInlineContent.load(node).inlineNodes,
-            )
+              Link(
+                  destination = node.destination,
+                  title = node.title,
+                  content = MdInlineContent.load(node).inlineNodes,
+              )
 
           is SoftLineBreak -> SoftBreak
           is HardLineBreak -> HardBreak

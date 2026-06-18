@@ -14,11 +14,7 @@ value class MdInlineContent(
         parentNode: Node,
     ): MdInlineContent =
         MdInlineContent(
-            inlineNodes =
-                parentNode.childNodes
-                    .map { MdInlineNode.load(it) }
-                    .toList(),
+            inlineNodes = parentNode.childNodes.map { MdInlineNode.load(it) }.toList(),
         )
-
   }
 }

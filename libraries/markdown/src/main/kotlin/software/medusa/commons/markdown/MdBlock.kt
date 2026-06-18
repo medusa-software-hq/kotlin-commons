@@ -12,7 +12,6 @@ import org.commonmark.node.IndentedCodeBlock
 import org.commonmark.node.LinkReferenceDefinition
 import org.commonmark.node.ListBlock as CmListBlock
 import org.commonmark.node.ListItem
-import org.commonmark.node.OrderedList
 import org.commonmark.node.Paragraph as CmParagraph
 import org.commonmark.node.ThematicBreak
 import software.medusa.commons.markdown.CommonMark_utils.childNodes
@@ -47,10 +46,11 @@ sealed class MdBlock {
       companion object {
         fun of(
             items: List<Item>,
-        ): Level? = when {
-          items.isNotEmpty() -> Level(items = items)
-          else -> null
-        }
+        ): Level? =
+            when {
+              items.isNotEmpty() -> Level(items = items)
+              else -> null
+            }
 
         internal fun load(
             listBlock: CmListBlock,

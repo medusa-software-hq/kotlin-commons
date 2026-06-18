@@ -19,14 +19,15 @@ interface OaiConfiguredClient : AutoCloseable {
     High,
     ExtraHigh;
 
-    fun toSdkEffort(): Effort = when (this) {
-      None -> Effort("none")
-      Minimal -> Effort("minimal")
-      Low -> Effort("low")
-      Medium -> Effort("medium")
-      High -> Effort("high")
-      ExtraHigh -> Effort("xhigh")
-    }
+    fun toSdkEffort(): Effort =
+        when (this) {
+          None -> Effort("none")
+          Minimal -> Effort("minimal")
+          Low -> Effort("low")
+          Medium -> Effort("medium")
+          High -> Effort("high")
+          ExtraHigh -> Effort("xhigh")
+        }
   }
 
   @Serializable
