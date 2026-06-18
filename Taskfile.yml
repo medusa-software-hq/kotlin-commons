@@ -1,0 +1,39 @@
+version: "3"
+
+# noinspection YAMLSchemaValidation
+.kotlinSources: &kotlinSources
+  - '**/*.kt'
+
+includes:
+  github:
+    taskfile: .github/Taskfile.yml
+    dir: github
+
+tasks:
+  all:fixFormatting:
+    desc: Fix formatting for the entire codebase
+    deps:
+      - github:config:fixFormatting
+      - gradleRoot:fixFormatting
+
+  all:analyzeStatically:
+    desc: Statically analyze the entire codebase
+    deps:
+      - github:config:lint
+      - github:workflows:lint
+      - gradleRoot:analyzeStatically
+
+  gradleRoot:fixFormatting:
+    desc: Fix formatting for the root Gradle project
+    sources: *kotlinSources
+    cmds:
+      - ./gradlew ktfmtFormat
+    interactive: true
+
+  gradleRoot:analyzeStatically:
+    desc: Statically analyze the root Gradle project
+    sources: *kotlinSources
+    cmds:
+      - ./gradlew assemble
+      - ./gradlew detekt
+    interactive: true
