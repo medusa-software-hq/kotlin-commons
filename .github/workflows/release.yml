@@ -4,9 +4,19 @@ name: Release
 # `release:patch` or `release:minor` cuts and publishes the corresponding
 # release. The version bump is therefore decided at review time, by the same
 # person who judges whether the change is breaking.
+#
+# `workflow_dispatch` is a manual escape hatch to release `main` on demand,
+# choosing the bump explicitly.
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version part to bump
+        type: choice
+        options: [patch, minor]
+        default: patch
 
 # Serialize releases so two release-labeled PRs merging close together cannot
 # race on tag creation.
@@ -20,23 +30,31 @@ permissions:
 jobs:
   release:
     if: >
-      github.event.pull_request.merged == true &&
-      (contains(github.event.pull_request.labels.*.name, 'release:patch') ||
-       contains(github.event.pull_request.labels.*.name, 'release:minor'))
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       (contains(github.event.pull_request.labels.*.name, 'release:patch') ||
+        contains(github.event.pull_request.labels.*.name, 'release:minor')))
     runs-on: ubuntu-latest
 
     permissions:
       # axion-release pushes the new tag to the repository.
       contents: write
 
+    env:
+      # On `pull_request` events axion-release determines the current branch from
+      # the GITHUB_HEAD_REF environment variable, which holds the PR's *source*
+      # branch — not the checked-out ref. Left alone, axion would see a non-release
+      # branch, skip `release` (releaseOnlyOnReleaseBranches), and stamp the
+      # version with that branch name. Override it to the base branch (`main`) so
+      # axion recognizes a release branch and produces a clean version.
+      GITHUB_HEAD_REF: ${{ github.event.pull_request.base.ref || github.ref_name }}
+
     steps:
       - uses: actions/checkout@v7.0.0
         with:
-          # Check out the branch the PR merged into (`main`), not the detached
-          # merge ref `pull_request` would default to. axion's release tasks are
-          # gated on the branch (releaseOnlyOnReleaseBranches), and it needs the
-          # full history and tags to derive the version.
-          ref: ${{ github.event.pull_request.base.ref }}
+          # Tag the merge commit on the base branch (`main`). Full history and
+          # tags are required for axion to derive the version.
+          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -47,14 +65,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6.2.0
 
-      - name: Resolve version bump from label
+      # The bump comes from the `workflow_dispatch` input when dispatched, or from
+      # the PR's `release:*` label when triggered by a merge.
+      - name: Resolve version bump
         id: scope
         run: |
-          if ${{ contains(github.event.pull_request.labels.*.name, 'release:minor') }}; then
-            echo "incrementer=incrementMinor" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            bump="${{ inputs.bump }}"
+          elif ${{ contains(github.event.pull_request.labels.*.name, 'release:minor') }}; then
+            bump="minor"
           else
-            echo "incrementer=incrementPatch" >> "$GITHUB_OUTPUT"
+            bump="patch"
           fi
+          case "$bump" in
+            minor) echo "incrementer=incrementMinor" >> "$GITHUB_OUTPUT" ;;
+            *)     echo "incrementer=incrementPatch" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       - name: Configure Git identity
         run: |
