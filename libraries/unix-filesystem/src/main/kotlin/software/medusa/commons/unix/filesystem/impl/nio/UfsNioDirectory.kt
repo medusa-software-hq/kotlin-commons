@@ -1,5 +1,6 @@
 package software.medusa.commons.unix.filesystem.impl.nio
 
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
@@ -22,6 +23,15 @@ class UfsNioDirectory(
 ) : UfsMutableDirectory {
   companion object {
     val Root = UfsNioDirectory(directoryPath = Path.of("/"))
+
+    suspend fun createTemporary(
+        prefix: UfsName.Literal,
+    ): UfsNioDirectory =
+        withContext(Dispatchers.IO) {
+          val tempDirectoryPath = Files.createTempDirectory(prefix.content)
+
+          UfsNioDirectory(directoryPath = tempDirectoryPath)
+        }
   }
 
   override suspend fun readIndex(): UfsMutableDirectoryIndex =
