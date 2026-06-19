@@ -35,3 +35,6 @@ tags the merge commit and publishes the artifacts to Cloudsmith in one job.
 Choose the label at review time — the reviewer judging whether a change is
 breaking is the right person to pick patch vs minor. Merging an unlabeled PR
 releases nothing.
+
+The same workflow can be run manually from the Actions tab (**Run workflow** →
+choose `patch` or `minor`) to release the current `main` on demand.
