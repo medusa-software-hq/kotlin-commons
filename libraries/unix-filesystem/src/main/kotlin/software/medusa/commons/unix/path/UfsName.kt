@@ -26,6 +26,13 @@ sealed interface UfsName {
   value class Literal(
       override val content: String,
   ) : UfsName {
+    companion object {
+      /** Concatenates a list of [Literal] names into a single string, without any separator. */
+      fun concat(
+          names: List<Literal>,
+      ): String = names.joinToString(separator = "") { it.content }
+    }
+
     init {
       require(content.isNotEmpty()) { "UfsName cannot be empty" }
 
