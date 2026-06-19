@@ -40,15 +40,6 @@ jobs:
       # axion-release pushes the new tag to the repository.
       contents: write
 
-    env:
-      # On `pull_request` events axion-release determines the current branch from
-      # the GITHUB_HEAD_REF environment variable, which holds the PR's *source*
-      # branch — not the checked-out ref. Left alone, axion would see a non-release
-      # branch, skip `release` (releaseOnlyOnReleaseBranches), and stamp the
-      # version with that branch name. Override it to the base branch (`main`) so
-      # axion recognizes a release branch and produces a clean version.
-      GITHUB_HEAD_REF: ${{ github.event.pull_request.base.ref || github.ref_name }}
-
     steps:
       - uses: actions/checkout@v7.0.0
         with:
@@ -87,14 +78,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Must be a separate Gradle invocation from `publish`: axion computes the
-      # version at configuration time, so the tag has to exist before the
-      # publish build configures, otherwise it would publish a `-SNAPSHOT`.
+      # `env -u GITHUB_HEAD_REF`: on `pull_request` events axion-release reads the
+      # current branch from GITHUB_HEAD_REF (the PR's *source* branch) instead of
+      # the checked-out ref. That makes it skip `release` (releaseOnlyOnReleaseBranches)
+      # and stamp the version with the source branch name. GITHUB_* variables can't
+      # be overridden via `env:`, so we unset it for the Gradle process; axion then
+      # falls back to the real git branch, which is the `main` we checked out.
+      #
+      # Must also be a separate Gradle invocation from `publish`: axion computes the
+      # version at configuration time, so the tag has to exist before the publish
+      # build configures, otherwise it would publish a `-SNAPSHOT`.
       - name: Create and push release tag
-        run: ./gradlew release -Prelease.versionIncrementer=${{ steps.scope.outputs.incrementer }}
+        run: env -u GITHUB_HEAD_REF ./gradlew release -Prelease.versionIncrementer=${{ steps.scope.outputs.incrementer }}
 
       - name: Publish
         env:
           CLOUDSMITH_USERNAME: ${{ secrets.CLOUDSMITH_USERNAME }}
           CLOUDSMITH_PASSWORD: ${{ secrets.CLOUDSMITH_PASSWORD }}
-        run: ./gradlew publish
+        run: env -u GITHUB_HEAD_REF ./gradlew publish
