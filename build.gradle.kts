@@ -3,12 +3,31 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 
 plugins {
+  alias(libs.plugins.axionRelease)
   alias(libs.plugins.versionCatalogUpdate)
 
   alias(libs.plugins.kotlin.jvm) apply false
   alias(libs.plugins.ktfmt) apply false
   alias(libs.plugins.detekt) apply false
 }
+
+scmVersion {
+  // Tags look like `v0.1.0`; the leading `v` is stripped from the derived version.
+  tag { prefix.set("v") }
+
+  // Guard against accidental releases from feature branches.
+  releaseOnlyOnReleaseBranches.set(true)
+  releaseBranchNames.set(listOf("main"))
+
+  // Default bump is patch (compatible changes). Breaking changes bump the minor
+  // component explicitly via `-Prelease.versionIncrementer=incrementMinor`.
+  versionIncrementer("incrementPatch")
+}
+
+// Single source of truth for the version: the latest Git tag reachable from HEAD.
+// A clean tagged commit yields e.g. `0.1.0`; any commit after a tag yields the
+// next patch as a `-SNAPSHOT` (e.g. `0.1.1-SNAPSHOT`).
+version = scmVersion.version
 
 val kotlinJvmPluginId = libs.plugins.kotlin.jvm.get().pluginId
 val detektPluginId = libs.plugins.detekt.get().pluginId

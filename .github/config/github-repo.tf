@@ -79,3 +79,19 @@ resource "github_actions_repository_permissions" "this" {
   enabled         = true
   allowed_actions = "all"
 }
+
+# Release labels consumed by the `Release` workflow. Applying one of these to a
+# pull request and merging it cuts and publishes the corresponding release.
+resource "github_issue_label" "release_patch" {
+  repository  = github_repository.this.name
+  name        = "release:patch"
+  color       = "0e8a16"
+  description = "On merge, cut a backwards-compatible (patch) release"
+}
+
+resource "github_issue_label" "release_minor" {
+  repository  = github_repository.this.name
+  name        = "release:minor"
+  color       = "d93f0b"
+  description = "On merge, cut a backwards-incompatible (minor) release"
+}

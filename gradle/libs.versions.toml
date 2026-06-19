@@ -1,4 +1,5 @@
 [versions]
+axionRelease = "1.21.2"
 commonmark = "0.28.0"
 detekt = "1.23.8"
 jgit = "7.7.0.202606012155-r"
@@ -28,6 +29,7 @@ ktor-client-okhttp = "io.ktor:ktor-client-okhttp-jvm:3.5.0"
 openai-kotlin = { module = "com.aallam.openai:openai-client-jvm", version.ref = "openai-kotlin" }
 
 [plugins]
+axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
