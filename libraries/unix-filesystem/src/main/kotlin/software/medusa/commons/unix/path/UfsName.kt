@@ -27,10 +27,13 @@ sealed interface UfsName {
       override val content: String,
   ) : UfsName {
     companion object {
-      /** Concatenates a list of [Literal] names into a single string, without any separator. */
+      /** Concatenates a list of [Literal] names into a single name, without any separator. */
       fun concat(
           names: List<Literal>,
-      ): String = names.joinToString(separator = "") { it.content }
+      ): Literal =
+          Literal(
+              content = names.joinToString(separator = "") { it.content },
+          )
     }
 
     init {

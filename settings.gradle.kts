@@ -13,4 +13,5 @@ include(
     ":libraries:system",
     ":libraries:text",
     ":libraries:unix-filesystem",
+    ":libraries:yaml",
 )

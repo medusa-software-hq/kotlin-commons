@@ -27,6 +27,7 @@ kotlinx-schema-generator-json = { module = "org.jetbrains.kotlinx:kotlinx-schema
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 ktor-client-okhttp = "io.ktor:ktor-client-okhttp-jvm:3.5.0"
 openai-kotlin = { module = "com.aallam.openai:openai-client-jvm", version.ref = "openai-kotlin" }
+snakeyaml = "org.yaml:snakeyaml:2.3"
 
 [plugins]
 axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
