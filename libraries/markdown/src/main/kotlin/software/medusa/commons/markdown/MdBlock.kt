@@ -25,6 +25,16 @@ sealed class MdBlock {
         CmParagraph().also { paragraph -> content.dump().forEach(paragraph::appendChild) }
 
     companion object {
+      /** A paragraph holding the given [inlineNodes]. */
+      fun of(
+          inlineNodes: List<MdInlineNode>,
+      ): Paragraph = Paragraph(content = MdInlineContent(inlineNodes = inlineNodes))
+
+      /** A paragraph holding [text] as a single text node. */
+      fun of(
+          text: String,
+      ): Paragraph = Paragraph(content = MdInlineContent.of(text = text))
+
       internal fun load(
           paragraph: CmParagraph,
       ): MdBlock =
@@ -96,6 +106,19 @@ sealed class MdBlock {
           }
 
       companion object {
+        /**
+         * A list item whose content is [inlineNodes], optionally containing a nested list of
+         * [nestedItems].
+         */
+        fun of(
+            inlineNodes: List<MdInlineNode>,
+            nestedItems: List<Item> = emptyList(),
+        ): Item =
+            Item(
+                content = MdInlineContent(inlineNodes = inlineNodes),
+                nestedLevel = Level.of(items = nestedItems),
+            )
+
         internal fun load(
             listItem: ListItem,
         ): Item {
@@ -131,6 +154,11 @@ sealed class MdBlock {
     }
 
     companion object {
+      /** A list block with the given top-level [items], which must not be empty. */
+      fun of(
+          items: List<Item>,
+      ): ListBlock = ListBlock(topLevel = Level(items = items))
+
       internal fun load(
           listBlock: CmListBlock,
       ): MdBlock.ListBlock =

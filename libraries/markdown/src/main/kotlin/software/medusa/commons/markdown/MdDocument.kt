@@ -60,6 +60,15 @@ value class MdDocument(
                 Paragraph().apply { appendChild(inlineNode.dump()) },
             )
             .trimEnd('\n')
+
+    internal fun render(
+        element: MdElement,
+    ): String =
+        commonmarkMarkdownRenderer
+            .render(
+                Document().also { document -> element.dump().forEach(document::appendChild) },
+            )
+            .trimEnd('\n')
   }
 
   fun render(): String = commonmarkMarkdownRenderer.render(dump())
