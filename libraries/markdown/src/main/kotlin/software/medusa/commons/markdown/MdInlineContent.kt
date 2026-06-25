@@ -10,6 +10,11 @@ value class MdInlineContent(
   internal fun dump(): List<Node> = inlineNodes.map { it.dump() }
 
   companion object {
+    /** Wraps [text] as inline content consisting of a single text node. */
+    fun of(
+        text: String,
+    ): MdInlineContent = MdInlineContent(inlineNodes = listOf(MdInlineNode.Text(text)))
+
     internal fun load(
         parentNode: Node,
     ): MdInlineContent =
