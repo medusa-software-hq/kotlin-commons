@@ -93,6 +93,35 @@ suspend fun <ResponseT : Any> OaiConfiguredClient.createStructuredCompletion(
   val generator = SerializationClassJsonSchemaGenerator.Default
   val responseSchema = generator.generateSchema(target = responseSerializer.descriptor)
 
+  val jsonResponse =
+      createStructuredCompletion(
+          request = request,
+          responseSchemaName = responseSchemaName,
+          responseSchema = responseSchema,
+      )
+
+  val responseJsonElement = jsonResponse.responseObject
+
+  val responseObject =
+      Json.decodeFromJsonElement(
+          deserializer = responseSerializer,
+          element = responseJsonElement,
+      )
+
+  return OaiConfiguredClient.StructuredCompletionResponse(
+      responseObject = responseObject,
+      usage = jsonResponse.usage,
+  )
+}
+
+suspend fun OaiConfiguredClient.createStructuredCompletion(
+    /** Completion request. */
+    request: OaiConfiguredClient.CompletionRequest,
+    /** Schema name (used for debugging). */
+    responseSchemaName: String = "response_schema",
+    /** Response JSON schema. */
+    responseSchema: JsonSchema,
+): OaiConfiguredClient.StructuredCompletionResponse<JsonElement> {
   val rawResponse =
       createRawStructuredCompletion(
           request = request,
@@ -110,14 +139,8 @@ suspend fun <ResponseT : Any> OaiConfiguredClient.createStructuredCompletion(
     )
   }
 
-  val responseObject =
-      Json.decodeFromJsonElement(
-          deserializer = responseSerializer,
-          element = responseJsonElement,
-      )
-
   return OaiConfiguredClient.StructuredCompletionResponse(
-      responseObject = responseObject,
+      responseObject = responseJsonElement,
       usage = rawResponse.usage,
   )
 }

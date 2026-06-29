@@ -4,6 +4,8 @@ import com.aallam.openai.api.chat.ChatCompletion
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatResponseFormat
 import com.aallam.openai.api.chat.JsonSchema
+import com.aallam.openai.api.logging.LogLevel
+import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAI
 import com.aallam.openai.client.OpenAIHost
 import java.net.URI
@@ -28,6 +30,7 @@ data object OaiProperClient : OaiFreeClient {
             OpenAI(
                 token = targetApiKey.content,
                 host = host,
+                logging = LoggingConfig(logLevel = LogLevel.None),
             )
 
         return object : OaiConfiguredClient {
