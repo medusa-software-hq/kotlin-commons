@@ -42,7 +42,7 @@ sealed class MdInlineNode {
           textNode: CmText,
       ): MdInlineNode.Text? =
           if (textNode.literal.isNotEmpty()) {
-            MdInlineNode.Text(textNode.literal)
+            Text(textNode.literal)
           } else {
             null
           }
@@ -64,6 +64,18 @@ sealed class MdInlineNode {
   data class Emphasis(
       val content: List<MdInlineNode>,
   ) : MdInlineNode() {
+    companion object {
+      fun of(
+          text: String,
+      ): MdInlineNode.Emphasis =
+          MdInlineNode.Emphasis(
+              content =
+                  listOf(
+                      Text(text),
+                  ),
+          )
+    }
+
     override fun dump(): Node =
         CmEmphasis().also { emphasis ->
           content.forEach { inline -> emphasis.appendChild(inline.dump()) }
@@ -73,6 +85,18 @@ sealed class MdInlineNode {
   data class Strong(
       val content: List<MdInlineNode>,
   ) : MdInlineNode() {
+    companion object {
+      fun of(
+          text: String,
+      ): MdInlineNode.Strong =
+          MdInlineNode.Strong(
+              content =
+                  listOf(
+                      Text(text),
+                  ),
+          )
+    }
+
     override fun dump(): Node =
         StrongEmphasis().also { strong ->
           content.forEach { inline -> strong.appendChild(inline.dump()) }

@@ -31,5 +31,11 @@ value class TxtFileContent(
         }
   }
 
+  val indexedLines: Sequence<TxtBlock.IndexedLine>
+    get() =
+        content.buildIndexedLines(
+            baseIndex = TxtLineIndex.First,
+        )
+
   fun dump(): String = content.dump()
 }

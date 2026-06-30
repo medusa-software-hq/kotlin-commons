@@ -22,6 +22,12 @@ data class MdChapter(
     subChapters.forEach { subChapter -> addAll(subChapter.dump(level = level + 1)) }
   }
 
+  fun render(): String =
+      MdDocument(
+              rootChapter = this,
+          )
+          .render()
+
   companion object {
     internal fun load(
         blockQueue: PoppableQueue<Block>,
