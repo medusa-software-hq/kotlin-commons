@@ -60,6 +60,13 @@ data class UfsRelativePath<out NameT : UfsName>(
             names = paths.flatMap { it.names },
         )
 
+    fun <NameT : UfsName> UfsRelativePath<NameT>.extend(
+        name: NameT,
+    ): UfsRelativePath<NameT> =
+        UfsRelativePath(
+            names = names + name,
+        )
+
     fun UfsRelativePath<*>.toLiteral(): UfsLiteralRelativePath? {
       val literalNames = names.map { it as? UfsName.Literal }.allNonNullOrNull() ?: return null
 
