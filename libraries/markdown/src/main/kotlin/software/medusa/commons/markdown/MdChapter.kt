@@ -28,6 +28,22 @@ data class MdChapter(
           )
           .render()
 
+  /**
+   * Every inline node in this chapter — its title, its element, and all its sub-chapters — in
+   * document order.
+   */
+  fun visitInlineNodes(): Sequence<MdInlineNode> =
+      title.visitInlineNodes() +
+          element.visitInlineNodes() +
+          subChapters.asSequence().flatMap { it.visitInlineNodes() }
+
+  fun replaceTitle(
+      newTitle: MdInlineContent,
+  ): MdChapter =
+      copy(
+          title = newTitle,
+      )
+
   companion object {
     internal fun load(
         blockQueue: PoppableQueue<Block>,

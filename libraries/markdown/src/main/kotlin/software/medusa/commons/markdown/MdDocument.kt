@@ -15,6 +15,9 @@ import software.medusa.commons.markdown.utils.poppableQueueOf
 value class MdDocument(
     val rootChapter: MdChapter,
 ) {
+  /** Every inline node in the document, in document order. */
+  fun visitInlineNodes(): Sequence<MdInlineNode> = rootChapter.visitInlineNodes()
+
   companion object {
     private val commonmarkParser = Parser.builder().extensions(listOf(CcExtension.create())).build()
 

@@ -24,6 +24,8 @@ sealed class MdBlock {
     override fun dump(): CmParagraph =
         CmParagraph().also { paragraph -> content.dump().forEach(paragraph::appendChild) }
 
+    override fun visitInlineNodes(): Sequence<MdInlineNode> = content.visitInlineNodes()
+
     companion object {
       /** A paragraph holding the given [inlineNodes]. */
       fun of(
@@ -48,6 +50,8 @@ sealed class MdBlock {
       val topLevel: Level,
   ) : MdBlock() {
     override fun dump(): BulletList = topLevel.dump()
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> = topLevel.visitInlineNodes()
 
     @JvmInline
     value class Level(
@@ -85,6 +89,9 @@ sealed class MdBlock {
         require(items.isNotEmpty()) { "List levels must have at least one item" }
       }
 
+      fun visitInlineNodes(): Sequence<MdInlineNode> =
+          items.asSequence().flatMap { it.visitInlineNodes() }
+
       internal fun dump(): BulletList =
           BulletList().also { list ->
             list.isTight = true
@@ -104,6 +111,9 @@ sealed class MdBlock {
             )
             nestedLevel?.let { item.appendChild(it.dump()) }
           }
+
+      fun visitInlineNodes(): Sequence<MdInlineNode> =
+          content.visitInlineNodes() + (nestedLevel?.visitInlineNodes() ?: emptySequence())
 
       companion object {
         /**
@@ -190,6 +200,8 @@ sealed class MdBlock {
           codeBlock.literal = code
           codeBlock.info = info
         }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> = emptySequence()
   }
 
   data class RawCodeBlock(
@@ -205,6 +217,8 @@ sealed class MdBlock {
     }
 
     override fun dump(): CcCodeBlock = CcCodeBlock().also { codeBlock -> codeBlock.literal = code }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> = emptySequence()
   }
 
   companion object {
@@ -258,4 +272,7 @@ sealed class MdBlock {
   }
 
   internal abstract fun dump(): Block
+
+  /** Every inline node this block contains, in document order (empty for code blocks). */
+  abstract fun visitInlineNodes(): Sequence<MdInlineNode>
 }

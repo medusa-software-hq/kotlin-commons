@@ -34,6 +34,13 @@ sealed class MdInlineNode {
 
   fun render(): String = MdDocument.render(inlineNode = this)
 
+  /**
+   * This node and all inline nodes nested within it, in document order. Leaf nodes yield just
+   * themselves; container nodes (emphasis, strong, link) yield themselves followed by their
+   * descendants.
+   */
+  open fun visitInlineNodes(): Sequence<MdInlineNode> = sequenceOf(this)
+
   data class Text(
       val text: String,
   ) : MdInlineNode() {
@@ -80,6 +87,9 @@ sealed class MdInlineNode {
         CmEmphasis().also { emphasis ->
           content.forEach { inline -> emphasis.appendChild(inline.dump()) }
         }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> =
+        sequenceOf(this) + content.asSequence().flatMap { it.visitInlineNodes() }
   }
 
   data class Strong(
@@ -101,6 +111,9 @@ sealed class MdInlineNode {
         StrongEmphasis().also { strong ->
           content.forEach { inline -> strong.appendChild(inline.dump()) }
         }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> =
+        sequenceOf(this) + content.asSequence().flatMap { it.visitInlineNodes() }
   }
 
   data class Link(
@@ -112,6 +125,9 @@ sealed class MdInlineNode {
         CmLink(destination, title).also { link ->
           content.forEach { inline -> link.appendChild(inline.dump()) }
         }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> =
+        sequenceOf(this) + content.asSequence().flatMap { it.visitInlineNodes() }
   }
 
   data object SoftBreak : MdInlineNode() {
