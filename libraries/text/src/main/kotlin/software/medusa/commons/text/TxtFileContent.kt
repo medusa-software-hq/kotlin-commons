@@ -37,5 +37,16 @@ value class TxtFileContent(
             baseIndex = TxtLineIndex.First,
         )
 
+  fun applyPatch(
+      patch: TxtPatch,
+  ): TxtFileContent =
+      TxtFileContent(
+          content =
+              content.applyPatch(
+                  patch = patch,
+                  baseLineIndex = TxtLineIndex.First,
+              ),
+      )
+
   fun dump(): String = content.dump()
 }

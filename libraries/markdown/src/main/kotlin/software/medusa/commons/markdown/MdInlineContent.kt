@@ -9,6 +9,10 @@ value class MdInlineContent(
 ) {
   internal fun dump(): List<Node> = inlineNodes.map { it.dump() }
 
+  /** Every inline node in this content, in document order, descending into nested nodes. */
+  fun visitInlineNodes(): Sequence<MdInlineNode> =
+      inlineNodes.asSequence().flatMap { it.visitInlineNodes() }
+
   companion object {
     /** Wraps [text] as inline content consisting of a single text node. */
     fun of(

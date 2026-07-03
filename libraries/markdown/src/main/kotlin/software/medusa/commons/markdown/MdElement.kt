@@ -11,6 +11,10 @@ value class MdElement(
   /** Renders this element as a standalone Markdown fragment. */
   fun render(): String = MdDocument.render(element = this)
 
+  /** Every inline node in this element's blocks, in document order. */
+  fun visitInlineNodes(): Sequence<MdInlineNode> =
+      blocks.asSequence().flatMap { it.visitInlineNodes() }
+
   companion object {
     val Empty = MdElement(emptyList())
 
