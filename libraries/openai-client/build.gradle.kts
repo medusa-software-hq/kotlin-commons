@@ -23,7 +23,10 @@ dependencies {
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.junit.jupiter)
 }
+
+tasks.test { useJUnitPlatform() }
 
 sourceSets {
   val main by getting
