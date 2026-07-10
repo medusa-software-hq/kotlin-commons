@@ -103,17 +103,13 @@ data object OaiProperClient : OaiFreeClient {
 }
 
 private fun ChatCompletion.extractResponseContent(): String {
-  val firstChoice =
-      choices.firstOrNull()
-          ?: throw IllegalStateException("OpenAI response did not contain any choices")
+  val firstChoice = choices.firstOrNull()
 
-  val message = firstChoice.message
-
-  val messageContent =
-      message.content
-          ?: throw IllegalStateException("OpenAI response choice did not contain text content")
-
-  return messageContent
+  return interpretResponseContent(
+      hasAnyChoice = firstChoice != null,
+      finishReason = firstChoice?.finishReason?.value,
+      messageContent = firstChoice?.message?.content,
+  )
 }
 
 private fun ChatCompletion.extractUsage(): OaiConfiguredClient.Usage? {
