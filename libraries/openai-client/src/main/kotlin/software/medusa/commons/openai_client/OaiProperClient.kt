@@ -68,15 +68,11 @@ data object OaiProperClient : OaiFreeClient {
                         ),
                     )
                   } catch (exception: OpenAIIOException) {
-                    reporter.report(
-                        OaiCriticalIssue("Network I/O error during chat completion", exception),
-                    )
+                    reporter.reportIoError(exception)
                     return OaiResult.NetworkError
                   } catch (exception: OpenAIException) {
                     // A transport/HTTP failure without a well-formed server response to inspect.
-                    reporter.report(
-                        OaiCriticalIssue("OpenAI client error during chat completion", exception),
-                    )
+                    reporter.reportClientError(exception)
                     return OaiResult.NetworkError
                   }
 
@@ -87,22 +83,35 @@ data object OaiProperClient : OaiFreeClient {
   }
 }
 
+private val zeroTokenUsage =
+    OaiTokenUsage(promptTokenCount = 0, completionTokenCount = 0, totalTokenCount = 0)
+
 private fun interpretCompletion(
     completion: ChatCompletion,
     reporter: OaiReporter,
 ): OaiResponse {
+  val choices = completion.choices
+
   val choice =
-      completion.choices.firstOrNull()
-          ?: return reporter.corrupted("OpenAI response contained no choices")
+      choices.firstOrNull()
+          ?: run {
+            reporter.reportNoChoices()
+            return OaiResponse.Corrupted
+          }
+
+  if (choices.size > 1) {
+    // We still act on the first choice, but more than one is unexpected for how we issue requests.
+    reporter.reportMultipleChoices(choiceCount = choices.size)
+  }
 
   val tokenUsage =
       completion.extractTokenUsage()
-          ?: return reporter.corrupted("OpenAI response did not include token usage")
+          ?: run {
+            reporter.reportMissingTokenUsage()
+            zeroTokenUsage
+          }
 
-  return runCatching { interpretChoice(choice, tokenUsage, reporter) }
-      .getOrElse { throwable ->
-        reporter.corrupted("Failed to interpret the OpenAI response", throwable)
-      }
+  return interpretChoice(choice, tokenUsage, reporter)
 }
 
 private fun interpretChoice(
@@ -111,35 +120,24 @@ private fun interpretChoice(
     reporter: OaiReporter,
 ): OaiResponse {
   val text = choice.message.content
+  val finishReason = choice.finishReason
 
-  return when (choice.finishReason) {
-    FinishReason.Length ->
-        OaiResponse.Complete(
-            generatedContent =
-                OaiGeneratedContent.Partial(
-                    partialGeneratedText = text.orEmpty(),
-                    interruptionReason = OaiInterruptionReason.LengthLimit,
-                ),
-            tokenUsage = tokenUsage,
-        )
+  return when (finishReason) {
+    FinishReason.Length -> completePartial(text, OaiInterruptionReason.LengthLimit, tokenUsage)
     FinishReason.ContentFilter ->
-        OaiResponse.Complete(
-            generatedContent =
-                OaiGeneratedContent.Partial(
-                    partialGeneratedText = text.orEmpty(),
-                    interruptionReason = OaiInterruptionReason.ContentFilter,
-                ),
-            tokenUsage = tokenUsage,
-        )
+        completePartial(text, OaiInterruptionReason.ContentFilter, tokenUsage)
     // A null finish reason is tolerated: some providers omit it on an otherwise complete response.
     null,
     FinishReason.Stop,
     FinishReason.ToolCalls,
     FinishReason.FunctionCall -> {
-      val toolCalls = choice.message.toolCalls.orEmpty().toOaiToolCalls()
+      val toolCalls =
+          choice.message.toolCalls.orEmpty().toOaiToolCalls(reporter)
+              ?: return OaiResponse.Corrupted
 
       if (text == null && toolCalls.isEmpty()) {
-        reporter.corrupted("OpenAI response choice had neither content nor tool calls")
+        reporter.reportEmptyResponse()
+        OaiResponse.Corrupted
       } else {
         OaiResponse.Complete(
             generatedContent =
@@ -151,19 +149,58 @@ private fun interpretChoice(
         )
       }
     }
-    else ->
-        reporter.corrupted(
-            "OpenAI reported an unrecognized finish reason: ${choice.finishReason?.value}",
-        )
+    else -> {
+      reporter.reportUnknownFinishReason(finishReason.value)
+      OaiResponse.Corrupted
+    }
   }
 }
 
-private fun List<ToolCall>.toOaiToolCalls(): List<OaiToolCall> =
+private fun completePartial(
+    text: String?,
+    interruptionReason: OaiInterruptionReason,
+    tokenUsage: OaiTokenUsage,
+): OaiResponse.Complete =
+    OaiResponse.Complete(
+        generatedContent =
+            OaiGeneratedContent.Partial(
+                partialGeneratedText = text.orEmpty(),
+                interruptionReason = interruptionReason,
+            ),
+        tokenUsage = tokenUsage,
+    )
+
+/**
+ * Converts SDK tool calls to [OaiToolCall]s, or returns `null` after reporting the first tool call
+ * that couldn't be interpreted (an invalid name or unparsable arguments).
+ */
+private fun List<ToolCall>.toOaiToolCalls(reporter: OaiReporter): List<OaiToolCall>? =
     filterIsInstance<ToolCall.Function>().map { toolCall ->
+      val function = toolCall.function
+
+      val toolName =
+          try {
+            OaiToolName(function.name)
+          } catch (exception: IllegalArgumentException) {
+            reporter.reportInvalidToolName(rawToolName = function.nameOrNull.orEmpty(), exception)
+            return null
+          }
+
+      val passedArgument =
+          try {
+            Json.parseToJsonElement(function.arguments)
+          } catch (exception: Exception) {
+            reporter.reportMalformedToolCallArguments(
+                rawArguments = function.argumentsOrNull.orEmpty(),
+                exception,
+            )
+            return null
+          }
+
       OaiToolCall(
-          toolName = OaiToolName(toolCall.function.name),
+          toolName = toolName,
           callId = OaiToolCallId(toolCall.id.id),
-          passedArgument = Json.parseToJsonElement(toolCall.function.arguments),
+          passedArgument = passedArgument,
       )
     }
 
@@ -175,12 +212,4 @@ private fun ChatCompletion.extractTokenUsage(): OaiTokenUsage? {
       completionTokenCount = sdkUsage.completionTokens ?: 0,
       totalTokenCount = sdkUsage.totalTokens ?: 0,
   )
-}
-
-private fun OaiReporter.corrupted(
-    message: String,
-    cause: Throwable? = null,
-): OaiResponse.Corrupted {
-  report(OaiCriticalIssue(message = message, cause = cause))
-  return OaiResponse.Corrupted
 }
