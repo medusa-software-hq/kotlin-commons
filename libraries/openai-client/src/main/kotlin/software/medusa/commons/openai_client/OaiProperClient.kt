@@ -189,7 +189,8 @@ private fun List<ToolCall>.toOaiToolCalls(reporter: OaiReporter): List<OaiToolCa
       val passedArgument =
           try {
             Json.parseToJsonElement(function.arguments)
-          } catch (exception: Exception) {
+          } catch (exception: IllegalArgumentException) {
+            // Covers both a malformed-JSON SerializationException (a subtype) and absent arguments.
             reporter.reportMalformedToolCallArguments(
                 rawArguments = function.argumentsOrNull.orEmpty(),
                 exception,
