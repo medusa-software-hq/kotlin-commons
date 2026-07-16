@@ -27,7 +27,7 @@ class OaiProperClient_integrationTests {
         )
 
     private fun buildTargetedClient(): OaiTargetedClient =
-        OaiProperClient.withTarget(
+        OaiProperClient.targeting(
             targetBaseUrl = OaiConfiguredClient.openAiBaseUrl,
             targetApiKey = apiKey,
         )

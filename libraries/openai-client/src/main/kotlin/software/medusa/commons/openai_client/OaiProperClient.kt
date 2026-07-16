@@ -13,7 +13,7 @@ import kotlinx.schema.json.encodeToJsonObject
 import kotlinx.serialization.json.Json
 
 data object OaiProperClient : OaiFreeClient {
-  override fun withTarget(
+  override fun targeting(
       targetBaseUrl: URI,
       targetApiKey: OaiApiKey,
   ): OaiTargetedClient {
