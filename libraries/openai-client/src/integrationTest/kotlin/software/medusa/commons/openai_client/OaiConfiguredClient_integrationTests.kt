@@ -7,6 +7,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.schema.Description
 import kotlinx.schema.Schema
 import kotlinx.serialization.Serializable
+import software.medusa.commons.openai_client.messages.OaiSystemMessage
+import software.medusa.commons.openai_client.messages.OaiUserMessage
 
 class OaiProperClient_integrationTests {
   @Serializable
@@ -49,13 +51,11 @@ class OaiProperClient_integrationTests {
                             OaiChatHistory(
                                 messages =
                                     listOf(
-                                        OaiMessage(
-                                            role = OaiRole.System,
-                                            text = "You are a Star Wars meme expert.",
+                                        OaiSystemMessage(
+                                            content = "You are a Star Wars meme expert.",
                                         ),
-                                        OaiMessage(
-                                            role = OaiRole.User,
-                                            text = "Hello there!",
+                                        OaiUserMessage(
+                                            content = "Hello there!",
                                         ),
                                     ),
                             ),
@@ -84,9 +84,8 @@ class OaiProperClient_integrationTests {
                             OaiChatHistory(
                                 messages =
                                     listOf(
-                                        OaiMessage(
-                                            role = OaiRole.User,
-                                            text = "Provide information about France",
+                                        OaiUserMessage(
+                                            content = "Provide information about France",
                                         ),
                                     ),
                             ),

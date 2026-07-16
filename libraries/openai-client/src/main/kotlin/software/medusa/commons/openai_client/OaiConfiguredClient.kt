@@ -4,13 +4,11 @@ import java.net.URI
 import kotlinx.schema.generator.json.serialization.SerializationClassJsonSchemaGenerator
 import kotlinx.schema.json.JsonSchema
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 interface OaiConfiguredClient : AutoCloseable {
-  @Serializable
   data class CompletionRequest(
       val input: OaiChatHistory,
       val reasoningEffort: OaiReasoningEffort = OaiReasoningEffort.Medium,
