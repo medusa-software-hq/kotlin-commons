@@ -1,4 +1,5 @@
 [versions]
+armeria = "1.32.0"
 axionRelease = "1.21.2"
 commonmark = "0.28.0"
 detekt = "1.23.8"
@@ -14,6 +15,7 @@ openai-kotlin = "4.1.0"
 versionCatalogUpdate = "1.1.0"
 
 [libraries]
+armeria = { module = "com.linecorp.armeria:armeria", version.ref = "armeria" }
 clikt = "com.github.ajalt.clikt:clikt-jvm:5.1.0"
 commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
 jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
