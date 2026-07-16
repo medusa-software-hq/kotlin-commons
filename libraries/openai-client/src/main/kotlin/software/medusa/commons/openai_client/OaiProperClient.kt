@@ -112,10 +112,10 @@ private fun ChatCompletion.extractResponseContent(): String {
   )
 }
 
-private fun ChatCompletion.extractUsage(): OaiConfiguredClient.Usage? {
+private fun ChatCompletion.extractUsage(): OaiTokenUsage? {
   val sdkUsage = usage ?: return null
 
-  return OaiConfiguredClient.Usage(
+  return OaiTokenUsage(
       promptTokenCount = sdkUsage.promptTokens ?: 0,
       completionTokenCount = sdkUsage.completionTokens ?: 0,
       totalTokenCount = sdkUsage.totalTokens ?: 0,

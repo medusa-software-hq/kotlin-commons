@@ -18,26 +18,19 @@ interface OaiConfiguredClient : AutoCloseable {
       val temperature: Double? = null,
   )
 
-  @Serializable
-  data class Usage(
-      val promptTokenCount: Int,
-      val completionTokenCount: Int,
-      val totalTokenCount: Int,
-  )
-
   data class UnstructuredCompletionResponse(
       val responseText: String,
-      val usage: Usage?,
+      val usage: OaiTokenUsage?,
   )
 
   data class RawStructuredCompletionResponse(
       val responseJsonElement: JsonElement,
-      val usage: Usage?,
+      val usage: OaiTokenUsage?,
   )
 
   data class StructuredCompletionResponse<ResponseT : Any>(
       val responseObject: ResponseT,
-      val usage: Usage?,
+      val usage: OaiTokenUsage?,
   )
 
   companion object {
