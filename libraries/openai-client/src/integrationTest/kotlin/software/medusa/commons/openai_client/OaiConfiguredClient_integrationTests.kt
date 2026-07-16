@@ -46,7 +46,7 @@ class OaiProperClient_integrationTests {
                 request =
                     OaiConfiguredClient.CompletionRequest(
                         input =
-                            OaiChat(
+                            OaiChatHistory(
                                 messages =
                                     listOf(
                                         OaiMessage(
@@ -81,7 +81,7 @@ class OaiProperClient_integrationTests {
                 request =
                     OaiConfiguredClient.CompletionRequest(
                         input =
-                            OaiChat(
+                            OaiChatHistory(
                                 messages =
                                     listOf(
                                         OaiMessage(

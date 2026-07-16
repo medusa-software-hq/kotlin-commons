@@ -4,7 +4,7 @@ import com.aallam.openai.api.chat.ChatMessage
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class OaiChat(
+data class OaiChatHistory(
     val messages: List<OaiMessage>,
 ) {
   init {

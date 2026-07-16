@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonObject
 interface OaiConfiguredClient : AutoCloseable {
   @Serializable
   data class CompletionRequest(
-      val input: OaiChat,
+      val input: OaiChatHistory,
       val reasoningEffort: OaiReasoningEffort = OaiReasoningEffort.Medium,
       val maxOutputTokenCount: Int? = null,
       val temperature: Double? = null,
