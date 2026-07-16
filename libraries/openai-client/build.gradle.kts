@@ -12,6 +12,7 @@ val integrationTestSourceSetName = "integrationTest"
 group = "software.medusa.commons"
 
 dependencies {
+  api(libs.armeria)
   api(libs.kotlinx.coroutines.core)
   api(libs.kotlinx.schema.annotations)
   api(libs.kotlinx.schema.generator.json)
