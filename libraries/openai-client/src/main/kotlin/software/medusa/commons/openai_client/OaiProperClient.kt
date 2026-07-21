@@ -120,12 +120,14 @@ private fun interpretChoice(
     reporter: OaiReporter,
 ): OaiResponse {
   val text = choice.message.content
+  val reasoningText = choice.message.reasoningContent
   val finishReason = choice.finishReason
 
   return when (finishReason) {
-    FinishReason.Length -> completePartial(text, OaiInterruptionReason.LengthLimit, tokenUsage)
+    FinishReason.Length ->
+        completePartial(text, reasoningText, OaiInterruptionReason.LengthLimit, tokenUsage)
     FinishReason.ContentFilter ->
-        completePartial(text, OaiInterruptionReason.ContentFilter, tokenUsage)
+        completePartial(text, reasoningText, OaiInterruptionReason.ContentFilter, tokenUsage)
     // A null finish reason is tolerated: some providers omit it on an otherwise complete response.
     null,
     FinishReason.Stop,
@@ -158,13 +160,15 @@ private fun interpretChoice(
 
 private fun completePartial(
     text: String?,
+    reasoningText: String?,
     interruptionReason: OaiInterruptionReason,
     tokenUsage: OaiTokenUsage,
 ): OaiResponse.Complete =
     OaiResponse.Complete(
         generatedContent =
             OaiGeneratedContent.Partial(
-                partialGeneratedText = text.orEmpty(),
+                partialGeneratedText = text,
+                reasoningText = reasoningText,
                 interruptionReason = interruptionReason,
             ),
         tokenUsage = tokenUsage,
