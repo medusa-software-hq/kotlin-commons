@@ -10,7 +10,7 @@ locals {
 # This repository
 resource "github_repository" "this" {
   name       = local.gh_repo_name
-  visibility = "private"
+  visibility = "public"
 
   is_template = false
 
