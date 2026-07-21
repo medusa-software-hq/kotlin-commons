@@ -141,6 +141,63 @@ class UfsDirectory_tests {
   }
 
   @Test
+  fun test_copyRecursivelyTo_preservesTheExecutableBit() = runTest {
+    val sourceDirectory = UfsMemoryDirectory()
+    val targetDirectory = UfsMemoryDirectory()
+
+    // An executable source file (think `gradlew`), alongside a regular one.
+    sourceDirectory
+        .createFile(
+            name = UfsName.Literal("gradlew"),
+            initialContent = "#!/bin/sh\n".encodeToByteString(),
+        )
+        .makeExecutable()
+
+    sourceDirectory.createFile(
+        name = UfsName.Literal("README.md"),
+        initialContent = "docs".encodeToByteString(),
+    )
+
+    // An executable file nested one level down, to cover the recursive path too.
+    sourceDirectory
+        .createDirectory(UfsName.Literal("scripts"))
+        .createFile(
+            name = UfsName.Literal("run.sh"),
+            initialContent = "#!/bin/sh\n".encodeToByteString(),
+        )
+        .makeExecutable()
+
+    sourceDirectory.copyRecursivelyTo(targetDirectory)
+
+    val copiedGradlew = assertIs<UfsMemoryFile>(targetDirectory.extract(UfsName.Literal("gradlew")))
+    assertEquals(
+        expected = true,
+        actual = copiedGradlew.isExecutable(),
+        message = "the executable bit must survive copyRecursivelyTo",
+    )
+
+    val copiedReadme =
+        assertIs<UfsMemoryFile>(targetDirectory.extract(UfsName.Literal("README.md")))
+    assertEquals(
+        expected = false,
+        actual = copiedReadme.isExecutable(),
+        message = "a non-executable file must stay non-executable",
+    )
+
+    val copiedNestedScript =
+        assertIs<UfsMemoryFile>(
+            targetDirectory.extractDeepReadonly(
+                UfsRelativePath.of(UfsName.Literal("scripts"), UfsName.Literal("run.sh")),
+            ),
+        )
+    assertEquals(
+        expected = true,
+        actual = copiedNestedScript.isExecutable(),
+        message = "the executable bit must survive a nested copy too",
+    )
+  }
+
+  @Test
   fun test_copyRecursivelyTo_replacesExistingDirectoryWithFile() = runTest {
     val sourceDirectory = UfsMemoryDirectory()
     val targetDirectory = UfsMemoryDirectory()
