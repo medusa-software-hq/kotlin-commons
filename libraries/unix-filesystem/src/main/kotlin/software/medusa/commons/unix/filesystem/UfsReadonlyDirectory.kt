@@ -74,23 +74,31 @@ private suspend fun UfsReadonlyDirectory.copyRecursivelyToImpl(
       is UfsReadonlyFile -> {
         val sourceContent = sourceEntity.read()
 
-        when (existingTargetEntity) {
-          null ->
-              targetDirectory.createFile(
-                  name = name,
-                  initialContent = sourceContent,
-              )
+        val targetFile =
+            when (existingTargetEntity) {
+              null ->
+                  targetDirectory.createFile(
+                      name = name,
+                      initialContent = sourceContent,
+                  )
 
-          is UfsMutableFile -> existingTargetEntity.write(sourceContent)
+              is UfsMutableFile -> existingTargetEntity.also { it.write(sourceContent) }
 
-          is UfsMutableDirectory -> {
-            existingTargetEntity.deleteRecursively()
+              is UfsMutableDirectory -> {
+                existingTargetEntity.deleteRecursively()
 
-            targetDirectory.createFile(
-                name = name,
-                initialContent = sourceContent,
-            )
-          }
+                targetDirectory.createFile(
+                    name = name,
+                    initialContent = sourceContent,
+                )
+              }
+            }
+
+        // Mirror the source file's executable bit. Without this, `copyRecursivelyTo` dropped it
+        // (unlike its sibling `materializeIn`), silently stripping 100755 from files such as
+        // `gradlew` — which then surfaced as spurious mode-only diffs downstream.
+        if (sourceEntity.isExecutable()) {
+          targetFile.makeExecutable()
         }
       }
 
