@@ -10,11 +10,22 @@ sealed class OaiGeneratedContent {
   ) : OaiGeneratedContent()
 
   /**
-   * The model was interrupted before finishing. [partialGeneratedText] is whatever it produced so
-   * far and must not be treated as a finished answer; [interruptionReason] says why it stopped.
+   * The model was interrupted before finishing; [interruptionReason] says why it stopped. Nothing
+   * here may be treated as a finished answer.
    */
   data class Partial(
-      val partialGeneratedText: String,
+      /**
+       * The answer text produced so far, or `null` if the model produced none. A `null` here likely
+       * indicates the model never reached the proper content-generation phase before it was
+       * interrupted (e.g. it hit the token limit while still reasoning).
+       */
+      val partialGeneratedText: String?,
+      /**
+       * The model's reasoning content, if the provider returned any. This may itself be complete or
+       * cut off: reasoning is produced before [partialGeneratedText], so an interruption can land
+       * within the reasoning phase or after it. `null` means no reasoning content was returned.
+       */
+      val reasoningText: String?,
       val interruptionReason: OaiInterruptionReason,
   ) : OaiGeneratedContent()
 }
