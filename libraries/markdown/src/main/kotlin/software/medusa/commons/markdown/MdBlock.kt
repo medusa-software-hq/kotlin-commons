@@ -1,7 +1,7 @@
 package software.medusa.commons.markdown
 
 import org.commonmark.node.Block
-import org.commonmark.node.BlockQuote
+import org.commonmark.node.BlockQuote as CmBlockQuote
 import org.commonmark.node.BulletList
 import org.commonmark.node.CustomBlock
 import org.commonmark.node.Document
@@ -221,6 +221,36 @@ sealed class MdBlock {
     override fun visitInlineNodes(): Sequence<MdInlineNode> = emptySequence()
   }
 
+  data class BlockQuote(
+      val content: List<MdBlock>,
+  ) : MdBlock() {
+    override fun dump(): CmBlockQuote =
+        CmBlockQuote().also { blockQuote ->
+          content.forEach { block -> blockQuote.appendChild(block.dump()) }
+        }
+
+    override fun visitInlineNodes(): Sequence<MdInlineNode> =
+        content.asSequence().flatMap { it.visitInlineNodes() }
+
+    companion object {
+      internal fun load(
+          blockQuote: CmBlockQuote,
+      ): BlockQuote =
+          BlockQuote(
+              content =
+                  blockQuote.childNodes
+                      .map { node ->
+                        node as? Block
+                            ?: throw MdParseException(
+                                "Expected block quote child to be a block, got ${node::class.simpleName}",
+                            )
+                      }
+                      .map { block -> MdBlock.load(block = block) }
+                      .toList(),
+          )
+    }
+  }
+
   companion object {
     internal fun load(
         block: Block,
@@ -243,8 +273,7 @@ sealed class MdBlock {
                     )
               }
 
-          is BlockQuote ->
-              throw MdParseException("Unsupported top-level node: ${block::class.simpleName}")
+          is CmBlockQuote -> BlockQuote.load(blockQuote = block)
 
           is ThematicBreak ->
               throw MdParseException("Unsupported top-level node: ${block::class.simpleName}")

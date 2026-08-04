@@ -3,6 +3,7 @@ package software.medusa.commons.markdown
 import org.commonmark.node.Code as CmCode
 import org.commonmark.node.Emphasis as CmEmphasis
 import org.commonmark.node.HardLineBreak
+import org.commonmark.node.HtmlInline as CmHtmlInline
 import org.commonmark.node.Link as CmLink
 import org.commonmark.node.Node
 import org.commonmark.node.SoftLineBreak
@@ -26,8 +27,24 @@ sealed class MdInlineNode {
 
           is SoftLineBreak -> SoftBreak
           is HardLineBreak -> HardBreak
-          else -> throw MdParseException("Unsupported inline node: ${node::class.simpleName}")
+          is CmHtmlInline -> Html.load(htmlInline = node)
+
+          // Any inline node type we don't otherwise model (e.g. images, or node types
+          // introduced by future CommonMark/extension versions) degrades to its plain text
+          // content instead of failing the whole parse.
+          else -> literalTextOf(node)?.let { Text(it) }
         }
+
+    /** The concatenated literal text of [node]'s descendant text nodes, without mutating it. */
+    private fun literalTextOf(node: Node): String? =
+        buildString {
+              generateSequence(node.firstChild) { it.next }
+                  .forEach { child ->
+                    if (child is CmText) append(child.literal)
+                    else literalTextOf(child)?.let(::append)
+                  }
+            }
+            .takeIf { it.isNotEmpty() }
   }
 
   internal abstract fun dump(): Node
@@ -66,6 +83,24 @@ sealed class MdInlineNode {
       val code: String,
   ) : MdInlineNode() {
     override fun dump(): Node = CmCode(code)
+  }
+
+  /** Raw inline HTML (e.g. `<br>`), kept verbatim rather than interpreted. */
+  data class Html(
+      val literal: String,
+  ) : MdInlineNode() {
+    companion object {
+      fun load(
+          htmlInline: CmHtmlInline,
+      ): MdInlineNode.Html? =
+          if (htmlInline.literal.isNotEmpty()) {
+            Html(htmlInline.literal)
+          } else {
+            null
+          }
+    }
+
+    override fun dump(): Node = CmHtmlInline().also { it.literal = literal }
   }
 
   data class Emphasis(

@@ -674,28 +674,99 @@ class MdDocument_tests {
   }
 
   @Test
-  fun parse_rejectsUnsupportedTopLevelStructures() {
-    assertFailsWith<MdParseException> {
-      MdDocument.parse(
-          """
-          # Root
+  fun parse_supportsBlockQuotes() {
+    val document =
+        MdDocument.parse(
+            """
+            # Root
 
-          > quoted
-          """
-              .trimIndent(),
-      )
-    }
+            > quoted
+            """
+                .trimIndent(),
+        )
+
+    assertEquals(
+        MdDocument(
+            rootChapter =
+                MdChapter(
+                    title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.BlockQuote(
+                                    content =
+                                        listOf(
+                                            MdBlock.Paragraph.of(text = "quoted"),
+                                        ),
+                                ),
+                            ),
+                        ),
+                    subChapters = emptyList(),
+                ),
+        ),
+        document,
+    )
+
+    assertEquals(document, MdDocument.parse(document.render()))
   }
 
   @Test
-  fun parse_rejectsUnsupportedInlineStructures() {
-    assertFailsWith<MdParseException> {
-      MdDocument.parse(
-          """
-          # Root ![alt](https://example.com/image.png)
-          """
-              .trimIndent(),
-      )
-    }
+  fun parse_supportsInlineHtml() {
+    val document = MdDocument.parse("# Root\n\nfoo <bar> baz")
+
+    assertEquals(
+        MdDocument(
+            rootChapter =
+                MdChapter(
+                    title = MdInlineContent(listOf(MdInlineNode.Text("Root"))),
+                    element =
+                        MdElement(
+                            listOf(
+                                MdBlock.Paragraph.of(
+                                    inlineNodes =
+                                        listOf(
+                                            MdInlineNode.Text("foo "),
+                                            MdInlineNode.Html("<bar>"),
+                                            MdInlineNode.Text(" baz"),
+                                        ),
+                                ),
+                            ),
+                        ),
+                    subChapters = emptyList(),
+                ),
+        ),
+        document,
+    )
+
+    assertEquals(document, MdDocument.parse(document.render()))
+  }
+
+  @Test
+  fun parse_degradesUnsupportedInlineNodesToLiteralTextInsteadOfThrowing() {
+    val document =
+        MdDocument.parse(
+            """
+            # Root ![alt](https://example.com/image.png)
+            """
+                .trimIndent(),
+        )
+
+    assertEquals(
+        MdDocument(
+            rootChapter =
+                MdChapter(
+                    title =
+                        MdInlineContent(
+                            listOf(
+                                MdInlineNode.Text("Root "),
+                                MdInlineNode.Text("alt"),
+                            ),
+                        ),
+                    element = MdElement.Empty,
+                    subChapters = emptyList(),
+                ),
+        ),
+        document,
+    )
   }
 }
