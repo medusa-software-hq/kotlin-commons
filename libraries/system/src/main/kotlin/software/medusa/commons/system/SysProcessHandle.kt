@@ -22,6 +22,13 @@ interface SysProcessHandle : AutoCloseable {
   suspend fun writeLine(text: String)
 
   /**
+   * Closes the process's stdin, signalling end-of-input, without terminating the process. A child
+   * that reads stdin to EOF (many CLIs do, even when the real work comes from arguments) blocks
+   * until this is called. Idempotent.
+   */
+  fun closeInput()
+
+  /**
    * Suspends until the process exits, then reports the exit code and the stderr captured so far.
    */
   suspend fun awaitTermination(): SysProcessTermination

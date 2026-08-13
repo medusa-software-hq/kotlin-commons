@@ -110,4 +110,23 @@ class SysProcessSpawner_tests {
     // A forcibly-killed process exits non-zero rather than hanging for 30s.
     assertTrue(termination.exitCode != 0)
   }
+
+  @Test
+  fun `closeInput signals EOF so a stdin-reading process completes`() = runTest {
+    val spawner = SysProcessSpawner()
+    // `cat` echoes stdin and only exits on EOF — so it finishes only once closeInput is called.
+    val handle =
+        spawner.launch(
+            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/cat"))
+        )
+
+    handle.writeLine("hello")
+    handle.closeInput()
+    val lines = handle.standardOutputLines.toList()
+    val termination = handle.awaitTermination()
+    handle.close()
+
+    assertEquals(listOf("hello"), lines)
+    assertEquals(0, termination.exitCode)
+  }
 }
