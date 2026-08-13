@@ -123,6 +123,10 @@ class SysProcessSpawner(
       }
     }
 
+    override fun closeInput() {
+      runCatching { stdin.close() }
+    }
+
     override suspend fun awaitTermination(): SysProcessTermination {
       val exitCode = withContext(Dispatchers.IO) { process.waitFor() }
       errorThread.join(errorJoinMillis)
