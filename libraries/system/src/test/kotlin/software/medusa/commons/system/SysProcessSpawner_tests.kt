@@ -3,7 +3,10 @@ package software.medusa.commons.system
 import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 
@@ -36,6 +39,7 @@ class SysProcessSpawner_tests {
         spawner.spawn(
             executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/echo")),
             arguments = listOf("hello"),
+            environment = System.getenv(),
         )
 
     assertEquals(0, result.exitCode)
@@ -44,89 +48,93 @@ class SysProcessSpawner_tests {
   }
 
   @Test
-  fun `launch streams stdout line by line`() = runTest {
-    val spawner = SysProcessSpawner()
-    val handle =
-        spawner.launch(
-            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/sh")),
+  fun `executeProcess streams standard output line by line`() = runTest {
+    val lines =
+        SysProcessSpawner().executeProcess(
+            executable = shell(),
             arguments = listOf("-c", "echo one; echo two; echo three"),
-        )
-
-    val lines = handle.standardOutputLines.toList()
-    val termination = handle.awaitTermination()
-    handle.close()
+            environment = System.getenv(),
+        ) {
+          standardOutput.consumeLines().toList()
+        }
 
     assertEquals(listOf("one", "two", "three"), lines)
-    assertEquals(0, termination.exitCode)
   }
 
   @Test
-  fun `launch feeds stdin and streams the response`() = runTest {
-    val spawner = SysProcessSpawner()
-    val handle =
-        spawner.launch(
-            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/sh")),
-            arguments = listOf("-c", "read line; echo \"got:\$line\""),
-        )
+  fun `a block wanting only the exit code does not stall a chatty process`() = runTest {
+    // Nothing is read here. Unless awaitExit drains what nobody took, a process writing more than
+    // a pipe holds would block forever against it.
+    val exitCode =
+        SysProcessSpawner().executeProcess(
+            executable = shell(),
+            arguments = listOf("-c", "yes hello | head -c 400000; yes err | head -c 400000 >&2"),
+            environment = System.getenv(),
+        ) {
+          awaitExit()
+        }
 
-    handle.writeLine("ping")
-    val lines = handle.standardOutputLines.toList()
-    val termination = handle.awaitTermination()
-    handle.close()
-
-    assertEquals(listOf("got:ping"), lines)
-    assertEquals(0, termination.exitCode)
+    assertEquals(0, exitCode)
   }
 
   @Test
-  fun `launch captures stderr separately from stdout`() = runTest {
-    val spawner = SysProcessSpawner()
-    val handle =
-        spawner.launch(
-            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/sh")),
-            arguments = listOf("-c", "echo oops >&2"),
-        )
-
-    val lines = handle.standardOutputLines.toList()
-    val termination = handle.awaitTermination()
-    handle.close()
-
-    assertEquals(emptyList(), lines)
-    assertEquals("oops\n", termination.errorOutput)
+  fun `standard output can be taken once, either way`() = runTest {
+    assertFailsWith<IllegalStateException> {
+      SysProcessSpawner().executeProcess(
+          executable = shell(),
+          arguments = listOf("-c", "echo x"),
+          environment = System.getenv(),
+      ) {
+        standardOutput.consumeLines()
+        standardOutput.consumeText()
+      }
+    }
   }
 
   @Test
-  fun `close terminates a still-running process`() = runTest {
-    val spawner = SysProcessSpawner()
-    val handle =
-        spawner.launch(
-            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/sh")),
-            arguments = listOf("-c", "sleep 30"),
-        )
+  fun `text is what was written, not lines rejoined`() = runTest {
+    val text =
+        SysProcessSpawner().executeProcess(
+            executable = shell(),
+            arguments = listOf("-c", "printf 'a\nb'"),
+            environment = System.getenv(),
+        ) {
+          standardOutput.consumeText()
+        }
 
-    handle.close()
-    val termination = handle.awaitTermination()
-
-    // A forcibly-killed process exits non-zero rather than hanging for 30s.
-    assertTrue(termination.exitCode != 0)
+    // No trailing newline invented, so the caller can tell one was never written.
+    assertEquals("a\nb", text)
   }
 
   @Test
-  fun `closeInput signals EOF so a stdin-reading process completes`() = runTest {
-    val spawner = SysProcessSpawner()
-    // `cat` echoes stdin and only exits on EOF — so it finishes only once closeInput is called.
-    val handle =
-        spawner.launch(
-            executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/cat"))
-        )
+  fun `leaving the block ends a process that would outlive it`() = runTest {
+    val elapsed = measureTime {
+      SysProcessSpawner().executeProcess(
+          executable = shell(),
+          arguments = listOf("-c", "sleep 30"),
+          environment = System.getenv(),
+      ) {
+        // Walk away without waiting for anything.
+      }
+    }
 
-    handle.writeLine("hello")
-    handle.closeInput()
-    val lines = handle.standardOutputLines.toList()
-    val termination = handle.awaitTermination()
-    handle.close()
-
-    assertEquals(listOf("hello"), lines)
-    assertEquals(0, termination.exitCode)
+    assertTrue(elapsed < 10.seconds, "leaving the block waited for the process: $elapsed")
   }
+
+  @Test
+  fun `spawn collects both streams and the exit code`() = runTest {
+    val outcome =
+        SysProcessSpawner()
+            .spawn(
+                executable = shell(),
+                arguments = listOf("-c", "echo out; echo err >&2; exit 3"),
+                environment = System.getenv(),
+            )
+
+    assertEquals(3, outcome.exitCode)
+    assertEquals("out\n", outcome.standardOutput)
+    assertEquals("err\n", outcome.errorOutput)
+  }
+
+  private fun shell() = SysExecutableHandle.resolve(executablePath = Path.of("/bin/sh"))
 }
