@@ -13,6 +13,11 @@ package software.medusa.commons.system
  *
  * Taking [standardOutput] whole and only then taking [standardError] is that shape, and it can
  * deadlock. Take them at the same time, or take neither and let [awaitExit] do it.
+ *
+ * A read that has been started runs until the stream ends or the block does. Giving up on one early
+ * — wrapping it in a timeout, say — does not release it on every platform, because whether closing
+ * a stream frees a thread already parked inside a read is up to the operating system. What reliably
+ * releases a reader is leaving the block, which ends the process and closes its pipes.
  */
 interface SysProcessScope {
   /** What the process reads as its input. */

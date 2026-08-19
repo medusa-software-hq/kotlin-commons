@@ -9,7 +9,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeoutOrNull
 
 class SysProcessSpawner_tests {
   @Test
@@ -111,21 +110,6 @@ class SysProcessSpawner_tests {
     }
 
     assertTrue(elapsed < 10.seconds, "leaving the block waited for the process: $elapsed")
-  }
-
-  @Test
-  fun `abandoning a read does not hold the block open`() = runTest {
-    val elapsed = measureTime {
-      SysProcessSpawner().executeProcess(
-          executable = shell(),
-          arguments = listOf("-c", "echo first; sleep 30"),
-      ) {
-        // The process goes quiet with the stream still open; give up on it rather than wait.
-        withTimeoutOrNull(1.seconds) { standardOutput.consumeLines().toList() }
-      }
-    }
-
-    assertTrue(elapsed < 10.seconds, "a parked read held the block open: $elapsed")
   }
 
   @Test
