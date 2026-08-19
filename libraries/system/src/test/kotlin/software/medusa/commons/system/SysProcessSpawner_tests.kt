@@ -39,6 +39,7 @@ class SysProcessSpawner_tests {
         spawner.spawn(
             executable = SysExecutableHandle.resolve(executablePath = Path.of("/bin/echo")),
             arguments = listOf("hello"),
+            environment = System.getenv(),
         )
 
     assertEquals(0, result.exitCode)
@@ -52,6 +53,7 @@ class SysProcessSpawner_tests {
         SysProcessSpawner().executeProcess(
             executable = shell(),
             arguments = listOf("-c", "echo one; echo two; echo three"),
+            environment = System.getenv(),
         ) {
           standardOutput.consumeLines().toList()
         }
@@ -67,6 +69,7 @@ class SysProcessSpawner_tests {
         SysProcessSpawner().executeProcess(
             executable = shell(),
             arguments = listOf("-c", "yes hello | head -c 400000; yes err | head -c 400000 >&2"),
+            environment = System.getenv(),
         ) {
           awaitExit()
         }
@@ -77,7 +80,11 @@ class SysProcessSpawner_tests {
   @Test
   fun `standard output can be taken once, either way`() = runTest {
     assertFailsWith<IllegalStateException> {
-      SysProcessSpawner().executeProcess(executable = shell(), arguments = listOf("-c", "echo x")) {
+      SysProcessSpawner().executeProcess(
+          executable = shell(),
+          arguments = listOf("-c", "echo x"),
+          environment = System.getenv(),
+      ) {
         standardOutput.consumeLines()
         standardOutput.consumeText()
       }
@@ -90,6 +97,7 @@ class SysProcessSpawner_tests {
         SysProcessSpawner().executeProcess(
             executable = shell(),
             arguments = listOf("-c", "printf 'a\nb'"),
+            environment = System.getenv(),
         ) {
           standardOutput.consumeText()
         }
@@ -104,6 +112,7 @@ class SysProcessSpawner_tests {
       SysProcessSpawner().executeProcess(
           executable = shell(),
           arguments = listOf("-c", "sleep 30"),
+          environment = System.getenv(),
       ) {
         // Walk away without waiting for anything.
       }
@@ -119,6 +128,7 @@ class SysProcessSpawner_tests {
             .spawn(
                 executable = shell(),
                 arguments = listOf("-c", "echo out; echo err >&2; exit 3"),
+                environment = System.getenv(),
             )
 
     assertEquals(3, outcome.exitCode)

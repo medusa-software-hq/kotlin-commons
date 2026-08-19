@@ -44,7 +44,8 @@ class SysProcessSpawner(
    * descendant it left behind — once the block ends, however it ends.
    *
    * [environment] replaces the parent's rather than adding to it, so a child sees what it is given
-   * and nothing else.
+   * and nothing else. There is no default: what a child may read is worth deciding each time, and a
+   * process handed everything its parent holds carries every credential the parent holds with it.
    *
    * @return Whatever [block] returned.
    * @throws IOException If the process could not be started.
@@ -52,8 +53,8 @@ class SysProcessSpawner(
   suspend fun <ResultT> executeProcess(
       executable: SysExecutableHandle,
       workingDirectory: Path? = null,
-      arguments: List<String> = emptyList(),
-      environment: Map<String, String> = System.getenv(),
+      arguments: List<String>,
+      environment: Map<String, String>,
       block: suspend SysProcessScope.() -> ResultT,
   ): ResultT {
     val process =
@@ -96,8 +97,8 @@ class SysProcessSpawner(
   suspend fun spawn(
       executable: SysExecutableHandle,
       workingDirectory: Path? = null,
-      arguments: List<String> = emptyList(),
-      environment: Map<String, String> = System.getenv(),
+      arguments: List<String>,
+      environment: Map<String, String>,
   ): SysProcessOutcome =
       executeProcess(
           executable = executable,
